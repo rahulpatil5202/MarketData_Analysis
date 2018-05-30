@@ -2,7 +2,7 @@ library(tidyverse)
 library(lubridate)
 library(stringi)
 
-## Let's first download NSE Bhavcopies from BSE India's official website
+## Let's first download NSE Bhavcopies from BSE India's official website...
 NSE_Bhav_Days <- seq(as.Date("2017-01-01"),as.Date("2018-05-29"),"days")
 
 ########################################################################################################
