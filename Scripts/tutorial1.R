@@ -72,6 +72,15 @@ Master_Data$`Total Trade Quantity`<-Master_Data$`Total Trade Quantity`/100000
 
 Master_Data$Date<-as.Date(Master_Data$Date)
 
+
+library(devtools)
+library(RCurl)
+library(httr)
+library(gganimate)
+# set_config( config( ssl_verifypeer = 0L ) )
+devtools::install_github("dgrtwo/gganimate")
+install.packages("ImageMagick")
+
 ## Visualisation with Bubble Plot
 P<- ggplot(Master_Data,aes(factor(Stock),Close,color=Stock,frame=Month)) +
   geom_jitter(aes(size = Close, colour=Stock, alpha=.02)) +
@@ -110,4 +119,86 @@ Master_Data %>%
 
 
 
-Quandl('NSE/BOROSIL')
+
+## Traded Quantity vs Price
+
+z<-Master_Data %>%
+  ggplot(aes(x = `Total Trade Quantity`, y = Close, color = Stock,frame=Month)) +
+  geom_smooth(method='loess') +
+  xlim(0,400)+
+  labs(title = "Monthly Traded Quantity vs Price", x = "Traded Quantity (Lacs)",y="Close Price") +
+  facet_wrap(~ Stock, ncol = 3, scale = "free_y") +
+  scale_fill_tq(fill="green4",theme="light") +
+  theme_tq() +
+  theme(panel.border = element_blank(), 
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.title = element_text(hjust = 0.5,size=18,colour="indianred4"),
+        axis.line = element_line(colour = "black"))+
+  theme(legend.position="none")
+
+z
+
+z1<-gganimate(z,'Quantity_Price.gif',ani.width=600,ani.height=400,interval=0.7)
+
+
+## Deviation from High & Low Price
+Master_Data_High<-Master_Data%>%mutate(Dev_High=High-Open)
+Master_Data_Low<-Master_Data%>%mutate(Dev_Low=Open-Low)
+
+## Computation of weekly average for high Price
+
+Master_Data_High_Week <- Master_Data_High %>%
+  tq_transmute(
+    select     = Dev_High,
+    mutate_fun = apply.weekly, 
+    FUN        = mean,
+    na.rm      = TRUE,
+    col_rename = "Dev_High_Mean"
+  )
+
+## Computation weekly average for Low Price
+
+Master_Data_Low_Week<-Master_Data_Low%>%
+  tq_transmute(
+    select  = Dev_Low,
+    mutate_fun = apply.weekly,
+    FUN = mean,
+    na.rm = TRUE,
+    col_rename = "Dev_Low_Mean"
+  )
+
+## Visualisation of density distribution of High Price
+
+High<-Master_Data_High_Week%>%ggplot(aes(x=Dev_High_Mean,color=Stock))+
+  geom_dotplot(binwidth=0.50,aes(fill=Stock))+
+  xlim(0,10)+
+  scale_fill_manual(values=c("#999999", "#E69F00","#CC9933","#99FF00","#CC3399","#FF9933"))+
+  labs(title="Distribution of High Price Deviation from Open Price",x="Weekly Mean Deviation")+
+  facet_wrap(~Stock,ncol=3,scale="free_y")+
+  scale_color_tq(values=c("#999999"))+
+  theme_tq()+
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_line(colour = "grey61", size = 0.5, linetype = "dotted"),
+        panel.grid.minor = element_blank(),
+        axis.line=element_line(colour="black"),
+        plot.title = element_text(hjust = 0.5,size=16,colour="indianred4"))+
+  theme(legend.position="none")
+
+## Visualisation of density distribution of Low Price
+Low<-Master_Data_Low_Week%>%ggplot(aes(x=Dev_Low_Mean,color=Stock))+
+  geom_dotplot(binwidth=0.50,aes(fill=Stock))+
+  xlim(0,10)+
+  scale_fill_manual(values=c("#999999", "#E69F00","#CC9933","#99FF00","#CC3399","#FF9933"))+
+  labs(title="Distribution of Weekly Low Price Deviation from Open Price",x="Weekly Mean Deviation")+
+  facet_wrap(~Stock,ncol=3,scale="free_y")+
+  scale_color_tq(values=c("#999999"))+
+  theme_tq()+
+  theme(panel.border = element_blank(),
+        panel.grid.major = element_line(colour = "grey61", size = 0.5, linetype = "dotted"),
+        panel.grid.minor = element_blank(),
+        axis.line=element_line(colour="black"),
+        plot.title = element_text(hjust = 0.5,size=16,colour="indianred4"))+
+  theme(legend.position="none")
+## Arrange
+grid.arrange(High,Low,ncol = 2, nrow = 1)
