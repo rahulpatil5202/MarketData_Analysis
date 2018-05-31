@@ -202,3 +202,83 @@ Low<-Master_Data_Low_Week%>%ggplot(aes(x=Dev_Low_Mean,color=Stock))+
   theme(legend.position="none")
 ## Arrange
 grid.arrange(High,Low,ncol = 2, nrow = 1)
+# 
+# Observing the Autocorrelation lags
+# The lag operator (also known as backshift operator) is a function that shifts (offsets) a time series such that the “lagged” values are aligned with the actual time series. The lags can be shifted any number of units, which simply controls the length of the backshift.
+# 
+# Here, “k” is denoted as lag. We will see the lag of 180 days period and see how stocks behave.
+# 
+# These are the steps for Computation
+# 
+# Define k lag period
+# Create columns for lag periods
+# Group the data by Stock by creating new data frame for lags
+# Apply lag.xts using tq_mutate() function on the new dataframe
+# Apply Auto-correaltion
+
+
+k <- 1:180
+col_names <- paste0("lag_", k)
+
+## Only Select Columns "Date" and "Close" from hte master data frame.
+
+Master_Data_lags<-Master_Data%>%
+  tibble::as_tibble() %>%
+  group_by(Stock)
+
+Master_Data_lags<-Master_Data_lags%>%select(Date,Close)
+# Apply lag.xts function using tq_mutate
+
+Master_Data_lags<-Master_Data_lags%>%
+  tq_mutate(
+    select = Close,
+    mutate_fun = lag.xts,
+    k=1:180,
+    col_rename=col_names
+  )
+
+# Calculate the autocorrelations and 95% cutoffs
+
+Master_Data_AutoCorrelations<-Master_Data_lags %>%
+  gather(key = "lag", value = "lag_value", -c(Stock,Date, Close)) %>%
+  mutate(lag = str_sub(lag, start = 5) %>% as.numeric) %>%
+  group_by(Stock, lag) %>%
+  summarize(
+    cor = cor(x = Close, y = lag_value, use = "pairwise.complete.obs"),
+    cutoff_upper = 2/(n())^0.5,
+    cutoff_lower = -2/(n())^0.5
+  )
+
+## Visualisation of Autocorrelation: ACF Plot
+
+Master_Data_AutoCorrelations %>%
+  ggplot(aes(x = lag, y = cor, color = Stock, group = Stock)) +
+  
+  # Add horizontal line a y=0
+  geom_hline(yintercept = 0) +
+  
+  # Plot autocorrelations
+  geom_point(size = 2) +
+  geom_segment(aes(xend = lag, yend = 0), size = 1) +
+  
+  # Add cutoffs
+  geom_line(aes(y = cutoff_upper), color = "blue", linetype = 2) +
+  geom_line(aes(y = cutoff_lower), color = "blue", linetype = 2) +
+  
+  # Add facets
+  facet_wrap(~ Stock, ncol = 3) +
+  
+  # Aesthetics
+  expand_limits(y = c(-1, 1)) +
+  scale_color_tq() +
+  theme_tq() +
+  labs(
+    title = paste0("Tidyverse ACF Plot: Lags ", rlang::expr_text(k)),
+    x = "Lags"
+  ) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major = element_line(colour = "grey61", size = 0.5, linetype = "dotted"),
+    plot.title = element_text(hjust = 0.5,size=18,colour="indianred4")
+  )
