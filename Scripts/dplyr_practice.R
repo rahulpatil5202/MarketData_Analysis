@@ -1,14 +1,14 @@
 # install.packages("WDI")
 # install.packages("dplyr")
-# install.packages("reshape")
+#install.packages("reshape")
 install.packages("tidyverse")
-library(tid)
+library(tidyverse)
 library(WDI)
 library(dplyr)
 library(reshape)
 
 #wdi_def <- read.csv("E:/datasets/WDI_Definition and Source.csv", header = T)
-dat <- read_csv("E:/datasets/WDI_Data.csv", header = T, check.names = T, stringsAsFactors = F) #Check.names for 
+dat <- read.csv("E:/datasets/WDI_Data.csv", header = T, check.names = T, stringsAsFactors = F) #Check.names for 
 #auto adjusting wrong variable names
 
 head(dat)
@@ -16,7 +16,7 @@ str(dat)
 summary(dat)
 
 colnames(dat)
-dat <- dplyr::rename(dat, Series.Name = ï..Series.Name) #Notice it changed column name to LHS of = and also
+dat <- dplyr::rename(dat, Series.Name = Ã¯..Series.Name) #Notice it changed column name to LHS of = and also
 
 
 #Unique Indicators series name
@@ -41,7 +41,7 @@ tail(arrange(dat, dat$Country.Code, dat$Country.Name))
 
 select(dat, Country.Code, Country.Name) # output of two coulmns as selected
 
-#returned all other columns
+#rename returns all columns along with one used for renaming
 #Note dplyr rename gets masked when you load reshape library
 
 dplyr::rename(iris, petal_length = Petal.Length)
@@ -54,7 +54,7 @@ distinct(select(dat, Country.Code, Series.Name))
 head(dat)
 dim(dat)
 
-#Unpivoting Data
+#Unpivoting Data using melt() from reshape package
 
 melt_dat <- melt(dat, id.vars = c("Country.Code", "Country.Name", "Series.Code", "Series.Name"))
 
