@@ -1,13 +1,15 @@
 ### Time series prediction practise
 
-# pckgs<-c("Quandl","Sweep","tidyverse","tidyquant","ggplot","forcats","stringr")
-# install.packages(pckgs,dependencies = TRUE)
+pckgs<-c("Quandl","Sweep","tidyverse","tidyquant","ggplot","forcats","stringr", "smooth", "Mcomp")
+install.packages(pckgs,dependencies = TRUE)
 library(timeSeries)
 library(Quandl)
 library(forecast)
 library(zoo)
 library(xts)
-
+library(Mcomp)
+library(smooth)
+library(tidyverse)
 # quandl_api_key('CuryXaHBCuZX8LsRs1g1')
 # YES_BANK = Quandl("NSE/YESBANK",collapse="daily",start_date="2017-05-15",type="raw")
 # YES_BANK$Stock <- "YES BANK"
@@ -15,7 +17,10 @@ library(xts)
 YES_BANK <- read.csv("D:/Downloads/YESBANK.csv", header = T, stringsAsFactors = F)
 
 head(YES_BANK)
+summary(YES_BANK)
 str(YES_BANK)
+
+YES_BANK$Date <- as.Date(YES_BANK$Date)
 
 sum(is.na(YES_BANK$Adj.Close))
 
@@ -25,32 +30,48 @@ YES_BANK$Adj.Close <- as.numeric(as.character(YES_BANK$Adj.Close))
 # Now remove NAs by complete.cases
 YES_BANK <- YES_BANK[complete.cases(YES_BANK),] 
 
+#Chnage all columns to numeric from column 2
+
+for (i in 2:7)
+{
+  
+  YES_BANK[,i] <- as.numeric(YES_BANK[,i])
+}
+
+YES_BANK <- YES_BANK[order(YES_BANK$Date),]
+
+#Let's add 10,30,50 and 200 days moving averages
+
+YES_BANK$MA10 <- rollmean(YES_BANK$Adj.Close, 10, fill = NA)
+YES_BANK$MA30 <- rollmean(YES_BANK$Adj.Close, 30, fill = NA)
+YES_BANK$MA50 <- rollmean(YES_BANK$Adj.Close, 50, fill = NA)
+YES_BANK$MA200 <- rollmean(YES_BANK$Adj.Close, 200, fill = NA)
+
+#lets visualize moving average differences
+
+ggplot(YES_BANK, aes(x=Date))+
+  geom_line(aes(y=MA10), color="red")+
+  geom_line(aes(y=MA30), color="green")+
+  geom_line(aes(y=MA50), color="blue")+
+  geom_line(aes(y=MA200), color="black")+
+  labs(title="Moving average", x="Dates", y="Value")+
+  
+
 yes_xts <- as.xts(YES_BANK[,-1],order.by = YES_BANK$Date, dateFormat = "%Y-%m-%d")
 
-start(yes_ts)
-end(yes_ts)
-frequency(yes_ts)
-periodicity(yes_ts)
 
 
-plot.zoo(yes_ts, plot.type = "single")
+start(yes_xts)
+end(yes_xts)
+frequency(yes_xts)
+periodicity(yes_xts)
 
-plot(diff(log(yes_ts)), plot.)
+plot.zoo(yes_xts)
 
-acf(x = log(yes_ts), lag.max = 20, na.action = na.pass)
+#lets add moving averages
 
-train_ts <- yes_ts[1:3000]
+yes_xts$MA10 <- rollmean(yes_xts$Adj.Close,k = 10, fill = NA) #keeping default align = center
+#i.e. 5 values from above and five from below to calculate rolling mean
+yes_xts$MA20 <- rollmean(yes_xts$Adj.Close,k = 20, fill = NA)
 
-auto.arima(yes_ts)
-
-fit1 <- arima(train_ts,order = c(3,1,0))
-
-pred_vals <- predict(fit1, se.fit = T, n.ahead = 10)
-act_vals<- yes_ts[3001:3010]
-
-pred_vals$pred
-YES_BANK[3001:3010,"Adj.Close"]
-
-head(yes_ts)
-head(log(yes_ts))
-head(diff(log(yes_ts)))
+plot.zoo(yes_xts)
