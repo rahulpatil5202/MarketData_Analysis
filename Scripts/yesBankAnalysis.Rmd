@@ -1,0 +1,81 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(timeSeries)
+library(tidyverse)
+library(Quandl)
+library(lubridate)
+library(forecast)
+
+```
+```{r}
+yes_bank <- Quandl("NSE/YESBANK",collapse = "daily", start_date = "2006-01-01", type="raw")
+#Not helpful as adjusted close not available. Lets download from yahoo fiannce
+```
+
+```{r}
+yes_bank <- read.csv("C:users/Rahul/Downloads/YESBANK.NS.csv", header = T, stringsAsFactors = F, check.names = T)
+```
+
+```{r}
+str(yes_bank)
+```
+```{r}
+yes_bank$Date <- as.Date(yes_bank$Date)
+yes_bank$Open <- as.numeric(yes_bank$Open)
+yes_bank$High <- as.numeric(yes_bank$High)
+yes_bank$Low <- as.numeric(yes_bank$Low)
+yes_bank$Close <- as.numeric(yes_bank$Close)
+yes_bank$Adj.Close <- as.numeric(yes_bank$Adj.Close)
+yes_bank$Volume <- as.numeric(yes_bank$Volume)
+
+```
+check NAs
+```{r}
+na_count <- sapply(yes_bank, function(x) sum(length(which(is.na(x)))))
+na_count <- as.data.frame(na_count)
+na_count
+
+```
+let's drop NA cases
+
+```{r}
+yes_bank <- yes_bank[which(!is.na(yes_bank$Open)),]
+
+```
+
+create time series 
+```{r}
+yes_ts <- xts(x = yes_bank[,-1], order.by = yes_bank$Date, frequency = 1)
+
+start(yes_ts)
+end(yes_ts)
+frequency(yes_ts)
+periodicity(yes_ts)
+
+```
+
+```{r fig.width=10, fig.height=16}
+acf(yes_ts)
+pacf(yes_ts)
+
+```
+```{r}
+plot(yes_ts)
+
+dc_yes <- decompose(yes_ts, type = "additive", filter = NULL)
+
+
+
+
+auto.arima(yes_ts$Adj.Close)
+
+```
+```{r}
+fit1 <- Arima(y = Adj.Close, order = c(2,1,0),)
+
+
+```

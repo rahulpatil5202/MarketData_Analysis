@@ -62,6 +62,25 @@ ggplot(data1_pivot, aes(x=Year, y=value))+
 
 #Let's analyse correlation
 
-boruta_train <- Boruta(Violent.crime~.,data1)
-plot(boruta_train)
-getConfirmedFormula(boruta_train)
+cols_wo_rate <- grep(colnames(data1), pattern = "rate", value = T,invert = T) #invert removes column names 
+#matching string rate
+
+data1_wo_rate <- data1[,cols_wo_rate]
+
+data1_wo_rate <- melt(data1_wo_rate, id.vars = c("Year","Population1"), variable_name = c("Crime.Type"))
+
+ggplot(data1_wo_rate, aes(x=Year, y=value, color=value))+
+  geom_point()+
+  facet_wrap("Crime.Type", scales = "free")
+
+#Pattern seems more or less same. let's find YoY change
+
+data1_wo_rate <- data1[,cols_wo_rate]
+
+
+
+
+
+
+
+
