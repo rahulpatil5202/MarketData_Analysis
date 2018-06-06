@@ -1,6 +1,9 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r}
@@ -12,12 +15,13 @@ library(forecast)
 
 ```
 ```{r}
+Quandl.api_key("CuryXaHBCuZX8LsRs1g1")
 yes_bank <- Quandl("NSE/YESBANK",collapse = "daily", start_date = "2006-01-01", type="raw")
 #Not helpful as adjusted close not available. Lets download from yahoo fiannce
 ```
 
 ```{r}
-yes_bank <- read.csv("C:users/Rahul/Downloads/YESBANK.NS.csv", header = T, stringsAsFactors = F, check.names = T)
+yes_bank <- read.csv("D:/Downloads/YESBANK.NS.csv", header = T, stringsAsFactors = F, check.names = T)
 ```
 
 ```{r}
@@ -56,26 +60,12 @@ end(yes_ts)
 frequency(yes_ts)
 periodicity(yes_ts)
 
-```
-
-```{r fig.width=10, fig.height=16}
-acf(yes_ts)
-pacf(yes_ts)
+class(yes_ts)
 
 ```
-```{r}
-plot(yes_ts)
 
-dc_yes <- decompose(yes_ts, type = "additive", filter = NULL)
-
-
-
-
-auto.arima(yes_ts$Adj.Close)
+```{r fig.width=10, fig.height=7}
+plot.zoo(yes_ts, plot.type = "multiple")
 
 ```
-```{r}
-fit1 <- Arima(y = Adj.Close, order = c(2,1,0),)
 
-
-```
