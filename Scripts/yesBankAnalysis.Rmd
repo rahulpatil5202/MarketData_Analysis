@@ -18,7 +18,7 @@ yes_bank <- Quandl("NSE/YESBANK",collapse = "daily", start_date = "2006-01-01", 
 ```
 
 ```{r}
-yes_bank <- read.csv("D:/Downloads/YESBANK.NS.csv", header = T, stringsAsFactors = F, check.names = T)
+yes_bank <- read.csv("C:/users/RAHUl/Downloads/YESBANK.NS.csv", header = T, stringsAsFactors = F, check.names = T)
 ```
 
 ```{r}
@@ -50,7 +50,23 @@ yes_bank <- yes_bank[which(!is.na(yes_bank$Open)),]
 
 create time series 
 ```{r}
-yes_ts <- xts(x = yes_bank[,-1], order.by = yes_bank$Date, frequency = 1)
+
+#yes_ts <- xts(x = yes_bank[,-1], order.by = yes_bank$Date, frequency = 1)
+ts.dt <- yes_bank[,1]
+ts.df <- yes_bank[,-1]
+std.dt <- seq.Date(from = as.Date("2005-07-12"), to = as.Date("2018-06-05"), by = 1)
+empty.ts <- xts(,std.dt)
+yes_ts <- xts(ts.df,ts.dt, frequency = 5)
+
+
+yes_ts <- merge(empty.ts, yes_ts)
+yes_ts <- na.locf(yes_ts)
+
+
+## Creating new ts() object to decompose seasonality, trend and error
+yes_ts1 <- as.ts(yes_ts)
+yes_ts1 <- ts(yes_ts1, frequency = 12)
+
 
 start(yes_ts)
 end(yes_ts)
@@ -62,7 +78,10 @@ class(yes_ts)
 ```
 
 ```{r fig.width=10, fig.height=7}
-plot.zoo(yes_ts, plot.type = "multiple")
+plot.zoo(yes_ts, plot.type = "multiple") #plot type adds no. of screens for each plot
 
 ```
 
+```{r}
+
+```
