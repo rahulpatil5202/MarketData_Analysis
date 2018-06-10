@@ -1,0 +1,69 @@
+---
+title: "R Notebook for Probability Test"
+output: html_notebook
+---
+
+```{r}
+c <- rnorm(5) #generates random numbers
+c
+
+```
+
+```{r}
+#generate same set of random numbers each time
+
+set.seed(222)
+
+randset <- rnorm(5)
+randset
+
+
+```
+
+
+
+```{r}
+t <- rnorm(20, mean = 10, sd = 0.3)
+t
+
+```
+
+Selecting random samples from a vector
+
+```{r}
+vec <- c(rnorm(50, mean = 3, sd = 0.001))
+vec
+
+```
+
+```{r}
+sample(vec, 10)
+
+sample(vec, 10, replace = T) #sample can be selected twice or more from population
+```
+Generate random sequences
+
+```{r}
+flips <- c("Head", "Tail")
+sample(flips, 10, replace = T)
+
+
+````
+
+Generating biased samples
+```{r}
+
+sample(flips, 20, replace = T, prob = c(0.3,0.7)) #30%False to 70% True
+
+````
+
+
+
+
+
+
+
+
+
+
+
