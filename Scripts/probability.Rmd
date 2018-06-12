@@ -48,18 +48,28 @@ flips <- c("Head", "Tail")
 sample(flips, 10, replace = T)
 
 
-````
+```
 
 Generating biased samples
 ```{r}
 
 sample(flips, 20, replace = T, prob = c(0.3,0.7)) #30%False to 70% True
 
-````
+```
 
+```{r}
+yes_bank <- read.csv("D:/Downloads/YESBANK.NS.csv", header = T, stringsAsFactors = F)
 
+```
 
+Plotting density
 
+```{r}
+yes_bank$Adj.Close <- as.numeric(yes_bank$Adj.Close)
+
+plot(yes_bank$Adj.Close, dnorm(yes_bank$Adj.Close), type = "l")
+
+```
 
 
 
