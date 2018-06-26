@@ -5,6 +5,18 @@ library(lubridate)
 library(randomForest)
 library(stringi)
 library(RPostgreSQL)
+library(anytime)
+##########################################
+#Define function to clean column names
+cleanColnames <- function (x){
+  colnames(x) <- gsub("[[:punct:]]+",'_', colnames(x))
+  colnames(x) <- gsub("[[:punct:]]$",'', colnames(x))
+  colnames(x) <- gsub("$[[:punct:]]",'', colnames(x))
+  colnames(x) <- tolower(colnames(x))
+  return(x)
+}
+
+
 ###########################################
 ## NSE Bhavcopy Processing for CSVs console
 
@@ -27,61 +39,62 @@ csv_files <- list.files(path = outpath, pattern = "\\.csv$")
 # read the csv files
 setwd(outpath)
 getwd()
-NSE_stock_data <- ldply(.data = csv_files, .fun = read.csv)
+NSE_stock_data <- ldply(.data = csv_files, function(x) read.csv(x, stringsAsFactors = F, as.is = T, check.names = T))
 
 head(NSE_stock_data)
 str(NSE_stock_data)
 
-anyDuplicated(NSE_stock_data,incomparables = F, nmax=1)
 
 #Let's check NA's in our Stock data
 na_count <-sapply(NSE_stock_data, function(y) sum(length(which(is.na(y)))))
 na_count <- data.frame(na_count)
 na_count
 
+#Drop useless column X
+NSE_stock_data <- subset(NSE_stock_data, select = -X)
 summary(NSE_stock_data)
 str(NSE_stock_data)
 
-#Change factors to continious variable types
-NSE_stock_data$SYMBOL <- as.character(NSE_stock_data$SYMBOL)
-NSE_stock_data$SERIES <- as.character(NSE_stock_data$SERIES)
-NSE_stock_data$TIMESTAMP <- as.character(NSE_stock_data$TIMESTAMP)
-NSE_stock_data$ISIN <- as.character(NSE_stock_data$ISIN)
-
 #Change date column to proper formating
 
-NSE_stock_data$TIMESTAMP <- dmy(NSE_stock_data$TIMESTAMP)
+NSE_stock_data$TIMESTAMP <- anydate(NSE_stock_data$TIMESTAMP) #only anydate help, very slow though
+
+
+#clean column names
+colnames(NSE_stock_data)[11] <- "TRADE_DATE"
+
+NSE_stock_data <- cleanColnames(NSE_stock_data)
 head(NSE_stock_data)
 
-
+rm(corruptZips,na_count,zipFiles, csv_files, outpath)
 
 #####################################
 ## NSE Indices processing to console
 
 csvs_path <- "E:/MarketData/NSE_Indices"
-all_files <- file.info(list.files(path = csvs_path, pattern = "\\.csv$", full.names = T))
-corrupt_files <- all_files[all_files$size < 1000,]
-unlink(row.names(corrupt_files), recursive = F, force = F)
+csv_files <- file.info(list.files(path = csvs_path, pattern = "\\.csv$", full.names = T))
+corrupt_csvs <- csv_files[csv_files$size < 1000,]
+unlink(row.names(corrupt_csvs), recursive = F, force = F)
 
-#Combine all csvs
-csvs_list <- list.files(path = csvs_path, pattern = "\\.csv$", full.names = T)
-NSE_Indices_data <- ldply(.data = csvs_list, function(x) read.csv(x, stringsAsFactors = F, as.is = T, check.names = T)) 
+#Reset csv list after corrupt file deletion
+csv_files <- list.files(path = csvs_path, pattern = "\\.csv$", full.names = T)
+NSE_Indices_data <- ldply(.data = csv_files, function(x) read.csv(x, stringsAsFactors = F, as.is = T, check.names = T)) 
 head(NSE_Indices_data)
 str(NSE_Indices_data)
 summary(NSE_Indices_data)
 
 #change date and other formats
 NSE_Indices_data$Index.Date <- dmy(NSE_Indices_data$Index.Date)
+
 numericFields <- colnames(NSE_Indices_data[,-c(1,2)])
 for(i in numericFields){
   NSE_Indices_data[,i] <- as.numeric(as.character(NSE_Indices_data[,i]))
   
 }
 
-#change column names to lowercase and remove special characters for testing in postgresql
-colnames(NSE_Indices_data) <- tolower(colnames(NSE_Indices_data))
-colnames(NSE_Indices_data) <- str_replace_all(colnames(NSE_Indices_data),"\\.|\\..|\\...", "\\_")
-colnames(NSE_Indices_data) <- str_replace_all(colnames(NSE_Indices_data),"_$|__$|___$", "")
+
+#clean column names to export to postgre using defined function cleanColnames
+NSE_Indices_data <- cleanColnames(NSE_Indices_data)
 
 str(NSE_Indices_data)
 #Check NAs
@@ -89,9 +102,10 @@ na_count <- sapply(NSE_Indices_data, function(x) sum(length(which(is.na(x)))))
 na_count <- data.frame(na_count)
 na_count
 
-#Dropping records having NA values
-NSE_Indices_data <- NSE_Indices_data[complete.cases(NSE_Indices_data),]
+#Dropping records having NA values in important columns
+NSE_Indices_data <- NSE_Indices_data[!is.na(NSE_Indices_data$open_index_value),]
 
+rm(corrupt_csvs,na_count,csv_files,csvs_path,i,numericFields)
 
 #######################################
 ## BSE bhavcopies processing to console
@@ -99,20 +113,20 @@ NSE_Indices_data <- NSE_Indices_data[complete.cases(NSE_Indices_data),]
 #Begin with deleting files with size less than 10 kb (invalid downloads)
 
 ## Get vector of all file names
-all_files <- file.info(list.files(path="E:/MarketData/BSE_Bhavcopies",pattern=".zip", full.names=TRUE))
+zipFiles <- file.info(list.files(path="E:/MarketData/BSE_Bhavcopies",pattern=".zip", full.names=TRUE))
 ## Extract vector of empty files' names
-corrupt_files <- all_files[all_files$size < 7000,]
-corrupt_files_names <- row.names(corrupt_files)
+corrupt_zips <- zipFiles[zipFiles$size < 7000,]
+corrupt_zips_names <- row.names(corrupt_zips)
 ## Remove empty files
-unlink(corrupt_files_names, recursive=TRUE, force=FALSE)
+unlink(corrupt_zips_names, recursive=TRUE, force=FALSE)
 
 # get all the zip files again as deleted corrupt files
 
-zipF <- list.files(path = "E:/MarketData/BSE_Bhavcopies", pattern = "\\.zip$", full.names = TRUE)
+zipFiles <- list.files(path = "E:/MarketData/BSE_Bhavcopies", pattern = "\\.zip$", full.names = TRUE)
 
 # unzip all your files
 outpath <- "E:/MarketData/BSE_Bhavcopies/unzipped_csvs"
-ldply(.data = zipF, .fun = unzip, exdir=outpath)
+ldply(.data = zipFiles, .fun = unzip, exdir=outpath)
 
 # get the csv files
 csv_files <- list.files(path = outpath, pattern = "\\.CSV$")
@@ -129,29 +143,33 @@ for(i in seq_along(csv_files)){
   raw <- read.csv(csv_files[i], header = T, stringsAsFactors = F)
   raw$Trade_Date_New <- dmy(stringi::stri_sub(csv_files[i],-10,-5))
   write.csv(raw,csv_files[i])
-  print(paste("Wrtting",i,"of", length(csv_files),"..Adding new column to ", csv_files[i]))
+  print(paste("Writing",i,"of", length(csv_files),"..Adding new column to ", csv_files[i]))
 }
 
 
-BSE_stock_data <- ldply(.data = csv_files, function(x) read.csv(x, header = T, stringsAsFactors = F))
+BSE_stock_data <- ldply(.data = csv_files, function(x) read.csv(x, header = T, stringsAsFactors = F, as.is = T, check.names = T))
 
 head(BSE_stock_data)
-
+str(BSE_stock_data)
 #Let's check NA's in our Stock data
 na_count <-sapply(BSE_stock_data, function(y) sum(length(which(is.na(y)))))
 na_count <- data.frame(na_count)
 na_count
 
 #Dropping NA and useless coulmns
-BSE_stock_data <- subset(BSE_stock_data, select = -c(TRADING_DATE,FILLER2,FILLER3,FILLER1))
+BSE_stock_data <- subset(BSE_stock_data, select = -c(TRADING_DATE,FILLER2,FILLER3,FILLER1,X,X.1,X.2))
 
 summary(BSE_stock_data)
 str(BSE_stock_data)
 
 #change trading date to date format
 BSE_stock_data$Trade_Date_New <- as.Date(BSE_stock_data$Trade_Date_New)
-
 str(BSE_stock_data)
+
+#Clean column names
+BSE_stock_data <- cleanColnames(BSE_stock_data)
+
+
 
 #Write csvs of all combined data and 
 #write all combined csvs to PostgreSQL database
@@ -161,45 +179,28 @@ cn1 <- dbConnect(PostgreSQL(), host = "localhost", port = 5432, dbname = "data_s
 
 #NSE csv
 #Adding table to postgreSQL
-dbWriteTable(cn1, "NSE_stock_data", NSE_stock_data)
+dbWriteTable(cn1, "nse", NSE_stock_data, row.names = F, append = T)
 
-mindate <- min(NSE_stock_data$TIMESTAMP)
-maxdate <- max(NSE_stock_data$TIMESTAMP)
+mindate <- min(NSE_stock_data$trade_date)
+maxdate <- max(NSE_stock_data$trade_date)
 write.csv(NSE_stock_data,file = paste("E:/MarketData/NSE_",mindate,"-",maxdate,".csv", sep = ""))
 
 #NSE Indices csv
 
-dbWriteTable(cn1, "nse_indices_data",NSE_Indices_data, append = T,row.names = F)
+dbWriteTable(cn1, "nse_indices",NSE_Indices_data, append = T,row.names = F)
 
-
-head(NSE_Indices_data)
-colnames(NSE_Indices_data) <- NULL
-mindate <- min(NSE_Indices_data$Index.Date)
-maxdate <- max(NSE_Indices_data$Index.Date)
+mindate <- min(NSE_Indices_data$index_date)
+maxdate <- max(NSE_Indices_data$index_date)
 write.csv(NSE_Indices_data,file = paste("E:/MarketData/NSE_Indices_",mindate,"-",maxdate,".csv", sep = ""), row.names = F)
 
 #BSE csv
-dbWriteTable(cn1, "BSE_stock_data", BSE_stock_data)
+dbWriteTable(cn1, "bse", BSE_stock_data, append = T, row.names = F)
 
-mindate <- min(BSE_stock_data$Trade_Date_New)
-maxdate <- max(BSE_stock_data$Trade_Date_New)
+mindate <- min(BSE_stock_data$trade_date_new)
+maxdate <- max(BSE_stock_data$trade_date_new)
 write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
 
-#Fetching some records from postgreSQL to validate data
-dbGetQuery(cn1, paste0("SELECT * from \"NSE_stock_data\" limit 10"))
-
-
-
-
-#Disconnecting database connection
 dbDisconnect(cn1)
-
-
-
-
-
-
-
 
 
 
