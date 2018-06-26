@@ -4,7 +4,7 @@ library(modelr)
 library(lubridate)
 library(randomForest)
 library(stringi)
-
+library(RPostgreSQL)
 ###########################################
 ## NSE Bhavcopy Processing for CSVs console
 
@@ -61,18 +61,27 @@ head(NSE_stock_data)
 csvs_path <- "E:/MarketData/NSE_Indices"
 all_files <- file.info(list.files(path = csvs_path, pattern = "\\.csv$", full.names = T))
 corrupt_files <- all_files[all_files$size < 1000,]
-View(head(corrupt_files)) #row names are filenames in this dataframe
 unlink(row.names(corrupt_files), recursive = F, force = F)
 
 #Combine all csvs
 csvs_list <- list.files(path = csvs_path, pattern = "\\.csv$", full.names = T)
-NSE_Indices_data <- ldply(.data = csvs_list, function(x) read.csv(x, stringsAsFactors = F)) 
+NSE_Indices_data <- ldply(.data = csvs_list, function(x) read.csv(x, stringsAsFactors = F, as.is = T, check.names = T)) 
 head(NSE_Indices_data)
 str(NSE_Indices_data)
 summary(NSE_Indices_data)
 
-#change date format
-NSE_Indices_data$Index.Date <- as.Date(NSE_Indices_data$Index.Date)
+#change date and other formats
+NSE_Indices_data$Index.Date <- dmy(NSE_Indices_data$Index.Date)
+numericFields <- colnames(NSE_Indices_data[,-c(1,2)])
+for(i in numericFields){
+  NSE_Indices_data[,i] <- as.numeric(as.character(NSE_Indices_data[,i]))
+  
+}
+
+#change column names to lowercase and remove special characters for testing in postgresql
+colnames(NSE_Indices_data) <- tolower(colnames(NSE_Indices_data))
+colnames(NSE_Indices_data) <- str_replace_all(colnames(NSE_Indices_data),"\\.|\\..|\\...", "\\_")
+colnames(NSE_Indices_data) <- str_replace_all(colnames(NSE_Indices_data),"_$|__$|___$", "")
 
 str(NSE_Indices_data)
 #Check NAs
@@ -144,22 +153,59 @@ BSE_stock_data$Trade_Date_New <- as.Date(BSE_stock_data$Trade_Date_New)
 
 str(BSE_stock_data)
 
-#Write csvs of all combined data
+#Write csvs of all combined data and 
+#write all combined csvs to PostgreSQL database
+
+#creating connection for postgresql
+cn1 <- dbConnect(PostgreSQL(), host = "localhost", port = 5432, dbname = "data_science", user = "rahul", password = "postgres@123")
 
 #NSE csv
+#Adding table to postgreSQL
+dbWriteTable(cn1, "NSE_stock_data", NSE_stock_data)
+
 mindate <- min(NSE_stock_data$TIMESTAMP)
 maxdate <- max(NSE_stock_data$TIMESTAMP)
 write.csv(NSE_stock_data,file = paste("E:/MarketData/NSE_",mindate,"-",maxdate,".csv", sep = ""))
 
 #NSE Indices csv
+
+dbWriteTable(cn1, "nse_indices_data",NSE_Indices_data, append = T,row.names = F)
+
+
+head(NSE_Indices_data)
+colnames(NSE_Indices_data) <- NULL
 mindate <- min(NSE_Indices_data$Index.Date)
 maxdate <- max(NSE_Indices_data$Index.Date)
-write.csv(NSE_Indices_data,file = paste("E:/MarketData/NSE_Indices_",mindate,"-",maxdate,".csv", sep = ""))
+write.csv(NSE_Indices_data,file = paste("E:/MarketData/NSE_Indices_",mindate,"-",maxdate,".csv", sep = ""), row.names = F)
 
 #BSE csv
+dbWriteTable(cn1, "BSE_stock_data", BSE_stock_data)
+
 mindate <- min(BSE_stock_data$Trade_Date_New)
 maxdate <- max(BSE_stock_data$Trade_Date_New)
 write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
+
+#Fetching some records from postgreSQL to validate data
+dbGetQuery(cn1, paste0("SELECT * from \"NSE_stock_data\" limit 10"))
+
+
+
+
+#Disconnecting database connection
+dbDisconnect(cn1)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
