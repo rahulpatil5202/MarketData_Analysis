@@ -17,6 +17,10 @@ cleanColnames <- function (x){
 }
 
 
+trimSpaces <- function(x){ 
+  gsub("(^[[:space:]]+|[[:space:]]+$)", "", x)
+}
+
 ###########################################
 ## NSE Bhavcopy Processing for CSVs console
 
