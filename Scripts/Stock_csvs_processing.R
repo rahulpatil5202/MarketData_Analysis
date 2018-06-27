@@ -157,7 +157,8 @@ na_count <- data.frame(na_count)
 na_count
 
 #Dropping NA and useless coulmns
-BSE_stock_data <- subset(BSE_stock_data, select = -c(TRADING_DATE,FILLER2,FILLER3,FILLER1,X,X.1,X.2))
+BSE_stock_data <- subset(BSE_stock_data, select = c(SC_CODE,SC_NAME,SC_GROUP,SC_TYPE,OPEN,HIGH,+
+              LOW,CLOSE,LAST,PREVCLOSE,NO_TRADES,NET_TURNOV,TDCLOINDI,ISIN_CODE,Trade_Date_New))
 
 summary(BSE_stock_data)
 str(BSE_stock_data)
