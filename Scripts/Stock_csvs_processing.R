@@ -16,9 +16,13 @@ cleanColnames <- function (x){
   return(x)
 }
 
-
-trimSpaces <- function(x){ 
-  gsub("(^[[:space:]]+|[[:space:]]+$)", "", x)
+trimSpaces <- function(df){
+  for(i in seq_along(colnames(df))){
+    if(is.character(df[,i])==T){
+      df[,i] <- trimws(df[,i])
+    }
+  }
+  return(df)
 }
 
 ###########################################
@@ -61,14 +65,11 @@ str(NSE_stock_data)
 
 #Change date column to proper formating
 
-NSE_stock_data$TIMESTAMP <- anydate(NSE_stock_data$TIMESTAMP) #only anydate help, very slow though
+NSE_stock_data$TIMESTAMP <- lubridate::dmy(NSE_stock_data$TIMESTAMP) 
 
-
-#clean column names
+#Change 'Date' column name as it is reserved keyword
 colnames(NSE_stock_data)[11] <- "TRADE_DATE"
 
-NSE_stock_data <- cleanColnames(NSE_stock_data)
-head(NSE_stock_data)
 
 rm(corruptZips,na_count,zipFiles, csv_files, outpath)
 
@@ -88,7 +89,7 @@ str(NSE_Indices_data)
 summary(NSE_Indices_data)
 
 #change date and other formats
-NSE_Indices_data$Index.Date <- dmy(NSE_Indices_data$Index.Date)
+NSE_Indices_data$Index.Date <- lubridate::dmy(NSE_Indices_data$Index.Date)
 
 numericFields <- colnames(NSE_Indices_data[,-c(1,2)])
 for(i in numericFields){
@@ -97,17 +98,13 @@ for(i in numericFields){
 }
 
 
-#clean column names to export to postgre using defined function cleanColnames
-NSE_Indices_data <- cleanColnames(NSE_Indices_data)
-
-str(NSE_Indices_data)
 #Check NAs
 na_count <- sapply(NSE_Indices_data, function(x) sum(length(which(is.na(x)))))
 na_count <- data.frame(na_count)
 na_count
 
 #Dropping records having NA values in important columns
-NSE_Indices_data <- NSE_Indices_data[!is.na(NSE_Indices_data$open_index_value),]
+NSE_Indices_data <- NSE_Indices_data[!is.na(NSE_Indices_data$Open.Index.Value),]
 
 rm(corrupt_csvs,na_count,csv_files,csvs_path,i,numericFields)
 
@@ -117,7 +114,7 @@ rm(corrupt_csvs,na_count,csv_files,csvs_path,i,numericFields)
 #Begin with deleting files with size less than 10 kb (invalid downloads)
 
 ## Get vector of all file names
-zipFiles <- file.info(list.files(path="E:/MarketData/BSE_Bhavcopies",pattern=".zip", full.names=TRUE))
+zipFiles <- file.info(list.files(path="E:/MarketData/BSE_Bhavcopies",pattern="\\.zip$", full.names=TRUE))
 ## Extract vector of empty files' names
 corrupt_zips <- zipFiles[zipFiles$size < 7000,]
 corrupt_zips_names <- row.names(corrupt_zips)
@@ -150,6 +147,7 @@ for(i in seq_along(csv_files)){
   print(paste("Writing",i,"of", length(csv_files),"..Adding new column to ", csv_files[i]))
 }
 
+rm(raw)
 
 BSE_stock_data <- ldply(.data = csv_files, function(x) read.csv(x, header = T, stringsAsFactors = F, as.is = T, check.names = T))
 
@@ -171,13 +169,23 @@ str(BSE_stock_data)
 BSE_stock_data$Trade_Date_New <- as.Date(BSE_stock_data$Trade_Date_New)
 str(BSE_stock_data)
 
-#Clean column names
-BSE_stock_data <- cleanColnames(BSE_stock_data)
-
+rm(corruptZips,na_count,csv_files, corrupt_csvs, zipFiles, i, outpath, corrupt_zips)
 
 
 #Write csvs of all combined data and 
-#write all combined csvs to PostgreSQL database
+#write all combined csvs to PostgreSQL database clean column names and trim white spaces first
+
+#Cleaning column names
+NSE_stock_data <- cleanColnames(NSE_stock_data)
+NSE_Indices_data <- cleanColnames(NSE_Indices_data)
+BSE_stock_data <- cleanColnames(BSE_stock_data)
+
+#trim white spaces from character columns using defines trimSpaces function
+
+NSE_stock_data <- trimSpaces(NSE_stock_data)
+NSE_Indices_data <- trimSpaces(NSE_Indices_data)
+BSE_stock_data <- trimSpaces(BSE_stock_data)
+
 
 #creating connection for postgresql
 cn1 <- dbConnect(PostgreSQL(), host = "localhost", port = 5432, dbname = "data_science", user = "rahul", password = "postgres@123")
