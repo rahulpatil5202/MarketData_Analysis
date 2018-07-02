@@ -1,4 +1,4 @@
-CREATE TABLE public.cdsl_holdings
+CREATE TABLE public.cdsl
 (
 	Description text,	
 	ISIN text,
@@ -11,5 +11,5 @@ WITH (
 )
 TABLESPACE pg_default;
 
-ALTER TABLE public.cdsl_holdings
+ALTER TABLE public.cdsl
     OWNER to rahul;
