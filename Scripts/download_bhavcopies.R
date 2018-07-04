@@ -3,7 +3,7 @@ library(lubridate)
 library(stringi)
 
 ## Let's first download NSE Bhavcopies from BSE India's official website...
-NSE_Bhav_Days <- seq(as.Date("2018-05-29"),as.Date("2018-06-25"),"days")
+NSE_Bhav_Days <- seq(as.Date("2018-06-20"),as.Date("2018-07-03"),"days")
 
 #######################################################################################################
 # # un comment below code for retrying failure dates and run from below till for loop end
@@ -41,7 +41,7 @@ for(i in seq_along(NSE_Bhav_Days)){
 ## Let's now download NSE All Indices Daily Report
 
 #Here starts original start and end dates of downloading data
-NSE_Indices_Days <- seq(as.Date("2018-05-28"),as.Date("2018-06-25"),"days")
+NSE_Indices_Days <- seq(as.Date("2018-06-20"),as.Date("2018-07-03"),"days")
 
 # #######################################################################################################
 # # un comment below code for retrying failure dates. let's start with import from failure log
@@ -78,7 +78,7 @@ for (i in seq_along(NSE_Indices_Days)){
 ## Let's now download BSE bhavcopies
 
 ## Set from and to date to download files
-BSE_Bhavdays <- seq(as.Date("2018-05-28"),as.Date("2018-06-25"),"days")
+BSE_Bhavdays <- seq(as.Date("2018-06-20"),as.Date("2018-07-03"),"days")
 
 # # ##############################################################################################
 # # #un comment below block of code for retrying failure dates. let's start with import from failure log
