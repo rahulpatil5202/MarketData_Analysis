@@ -30,7 +30,7 @@ nseDownload <- function(date_range)
 
 nseReattemptDownload <- function(failure_file)
 {
-  while(!is.null(failure_file))
+  if(file.info(failure_file)$size != 0)
   {
     cat("\n\nRe-Attempting failed NSE Bhavcopy files\n\n")
     Sys.sleep(2)
@@ -39,6 +39,11 @@ nseReattemptDownload <- function(failure_file)
     write(NULL,"E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt")
     nseDownload(failed_dates)
   }
+  else
+  {
+      cat('\n\nNSE Bhavcopy download Completed\n\n')
+      Sys.sleep(1)
+    }
  
 }
 
@@ -71,7 +76,7 @@ nseIndicesDownload <- function(date_range)
 
 nseIndicesReattemptDownload <- function(failure_file)
 {
-  while(!is.null(failure_file))
+  if(file.info(failure_file)$size != 0)
   {
     cat("\n\nRe-Attempting failed NSE Indices files\n\n")
     Sys.sleep(2)
@@ -79,6 +84,11 @@ nseIndicesReattemptDownload <- function(failure_file)
     failed_dates <- as.Date(failed_data$V2)
     write(NULL,"E:/MarketData/NSE_Indices/NSE_Bhav_Failure.txt")
     nseIndicesDownload(failed_dates)
+  }
+  else
+  {
+      cat('\n\nNSE Indices data download Completed\n\n')
+      Sys.sleep(1)
   }
     
 }
@@ -113,11 +123,16 @@ bseReattemptDownload <- function(failure_file)
 {
   cat('\n\nRe-attempting failed BSE Bhavcopy files\n\n')
   Sys.sleep(1)
-  while(!is.null(failure_file))
+  if(file.info(failure_file)$size != 0)
   {
     failed_data <- read.csv("E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
     failed_dates <- as.Date(failed_data$V2)
     bseDownload(failed_dates)
+  }
+  else
+  {
+      cat('\n\nBSE Bhavcopy download Completed\n\n')
+      Sys.sleep(1)
   }
 }
 
