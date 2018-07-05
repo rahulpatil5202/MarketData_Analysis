@@ -1,13 +1,11 @@
 library(tidyverse)
 library(lubridate)
 library(stringi)
-
-
-report_days <- seq(as.Date("2018-06-20"),as.Date("2018-07-03"),"days")
+library(RPostgreSQL)
 
 nseDownload <- function(date_range)
 {
-  message('\n\nDownloading NSE Bhav copies now..\n\n')
+  cat('\n\nDownloading NSE Bhav copies now..\n\n')
   Sys.sleep(1)
   for(i in seq_along(date_range)){
     dd <- formatC(lubridate::day(date_range[i]),width = 2, flag = "0")
@@ -34,7 +32,7 @@ nseReattemptDownload <- function(failure_file)
 {
   while(!is.null(failure_file))
   {
-    message("\n\nRe-Attempting failed NSE Bhavcopy files\n\n")
+    cat("\n\nRe-Attempting failed NSE Bhavcopy files\n\n")
     Sys.sleep(2)
     failed_data <- read.csv("E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
     failed_dates <- as.Date(failed_data$V2)
@@ -49,7 +47,7 @@ nseReattemptDownload <- function(failure_file)
 
 nseIndicesDownload <- function(date_range)
 {
-  message('\n\nDownloading NSE Indices data now..\n\n')
+  cat('\n\nDownloading NSE Indices data now..\n\n')
   Sys.sleep(1)
   for (i in seq_along(date_range)){
     dd <- formatC(lubridate::day(date_range[i]),width = 2, flag = "0")
@@ -75,7 +73,7 @@ nseIndicesReattemptDownload <- function(failure_file)
 {
   while(!is.null(failure_file))
   {
-    message("\n\nRe-Attempting failed NSE Indices files\n\n")
+    cat("\n\nRe-Attempting failed NSE Indices files\n\n")
     Sys.sleep(2)
     failed_data <- read.csv("E:/MarketData/NSE_Indices/NSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
     failed_dates <- as.Date(failed_data$V2)
@@ -88,7 +86,7 @@ nseIndicesReattemptDownload <- function(failure_file)
 
 bseDownload <- function(date_range)
 {
-  message('\n\nDownloading BSE Bhavcopies now..\n\n')
+  cat('\n\nDownloading BSE Bhavcopies now..\n\n')
   Sys.sleep(1)
   for (i in seq_along(date_range)){
     dd <- formatC(lubridate::day(date_range[i]),width = 2, flag = "0")
@@ -113,7 +111,7 @@ bseDownload <- function(date_range)
 
 bseReattemptDownload <- function(failure_file)
 {
-  message('\n\nRe-attempting failed BSE Bhavcopy files\n\n')
+  cat('\n\nRe-attempting failed BSE Bhavcopy files\n\n')
   Sys.sleep(1)
   while(!is.null(failure_file))
   {
@@ -124,6 +122,29 @@ bseReattemptDownload <- function(failure_file)
 }
 
 
-nseDownload(report_days)
-nseIndicesDownload(report_days)
-bseDownload(report_days)
+
+## Starting main thread here
+
+cn1 <- dbConnect(PostgreSQL(), host = 'localhost', port = 5432, dbname = 'data_science',user = 'rahul', password = 'postgres@123')
+
+maxdb_date_nse <- dbGetQuery(cn1, 'select max(trade_date) from nse')
+nse_date_range <- seq.Date(maxdb_date_nse$max+1,today()-1,"days")
+
+maxdb_date_nseIndices <- dbGetQuery(cn1, 'select max(index_date) from nse_indices')
+nseIndices_date_range <- seq.Date(maxdb_date_nseIndices$max+1,today()-1,"days")
+
+maxdb_date_bse <- dbGetQuery(cn1, 'select max(trade_date_new) from bse')
+bse_date_range <- seq.Date(maxdb_date_bse$max+1,today()-1, "days")
+
+
+nseDownload(nse_date_range)
+nseIndicesDownload(nseIndices_date_range)
+bseDownload(bse_date_range)
+
+
+## Explicitly call to download date range files
+# report_days <- seq(as.Date("2018-06-20"),as.Date("2018-07-03"),"days")
+# 
+# nseDownload(report_days)
+# nseIndicesDownload(report_days)
+# bseDownload(report_days)
