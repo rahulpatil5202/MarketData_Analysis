@@ -213,6 +213,8 @@ mindate <- min(BSE_stock_data$trade_date_new)
 maxdate <- max(BSE_stock_data$trade_date_new)
 write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
 
+
+rm(list=ls())
 dbDisconnect(cn1)
 
 

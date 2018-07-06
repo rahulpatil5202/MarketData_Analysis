@@ -155,7 +155,7 @@ bse_date_range <- seq.Date(maxdb_date_bse$max+1,today()-1, "days")
 nseDownload(nse_date_range)
 nseIndicesDownload(nseIndices_date_range)
 bseDownload(bse_date_range)
-
+rm(list=ls())
 
 ## Explicitly call to download date range files
 # report_days <- seq(as.Date("2018-06-20"),as.Date("2018-07-03"),"days")
