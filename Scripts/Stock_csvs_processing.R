@@ -25,6 +25,36 @@ trimSpaces <- function(df){
   return(df)
 }
 
+rootCleanUp <- function(){
+  cat('\n\nCleaning BSE root folder\n\n')
+  bseZips <- list.files(path = 'E:/MarketData/BSE_Bhavcopies', pattern = "\\.zip$", full.names = T)
+  file.copy(from = bseZips, to = 'E:/MarketData/BSE_Bhavcopies/Archive/', overwrite = T, copy.mode = T)
+  file.remove(bseZips)
+  bseCsvs <- list.files(path = 'E:/MarketData/BSE_Bhavcopies/unzipped_csvs', pattern = "\\.csv$|\\.CSV$", full.names = T)
+  file.copy(from = bseCsvs, to = 'E:/MarketData/BSE_Bhavcopies/Archive/unzipped_csvs/', overwrite = T, copy.mode = T)
+  file.remove(bseCsvs)
+  cat('\n\nDone cleaning BSE root folder')
+  
+  cat('\n\nCleaning NSE root folder\n\n')
+  nseZips <- list.files(path = 'E:/MarketData/NSE_Bhavcopies', pattern = "\\.zip$", full.names = T)
+  file.copy(from = nseZips, to = 'E:/MarketData/NSE_Bhavcopies/Archive/', overwrite = T, copy.mode = T)
+  file.remove(nseZips)
+  nseCsvs <- list.files(path = 'E:/MarketData/NSE_Bhavcopies/unzipped_csvs', pattern = "\\.csv$|\\.CSV$", full.names = T)
+  file.copy(from = nseCsvs, to = 'E:/MarketData/NSE_Bhavcopies/Archive/unzipped_csvs', overwrite = T, copy.mode = T)
+  file.remove(nseCsvs)
+  cat('\n\nDone cleaning NSE root folder')
+  
+  cat('\n\nCleaning NSE Indices folder\n\n')
+  nseIndCsvs <- list.files(path = 'E:/MarketData/NSE_Indices', pattern = "\\.csv$|\\.CSV$", full.names = T)
+  file.copy(from = nseIndCsvs, to = 'E:/MarketData/NSE_Indices/Archive/', overwrite = T, copy.mode = T)
+  file.remove(nseIndCsvs)
+  cat('\n\nDone cleaning NSE Indices root folder')
+  
+  rm(bseZips,bseCsvs,nseZips,nseCsvs,nseIndCsvs)
+  
+}
+
+
 ###########################################
 ## NSE Bhavcopy Processing for CSVs console
 
@@ -212,6 +242,9 @@ dbWriteTable(cn1, "bse", BSE_stock_data, append = T, row.names = F)
 mindate <- min(BSE_stock_data$trade_date_new)
 maxdate <- max(BSE_stock_data$trade_date_new)
 write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
+
+#Let's clean root folders to archives
+rootCleanUp()
 
 
 rm(list=ls())
