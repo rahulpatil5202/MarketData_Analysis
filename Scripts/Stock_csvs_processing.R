@@ -246,9 +246,9 @@ write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,"
 #Let's clean root folders to archives
 rootCleanUp()
 
-
-rm(list=ls())
 dbDisconnect(cn1)
+rm(list=ls())
+
 
 
 
