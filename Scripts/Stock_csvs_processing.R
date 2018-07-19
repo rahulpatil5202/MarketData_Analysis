@@ -226,7 +226,7 @@ dbWriteTable(cn1, "nse", NSE_stock_data, row.names = F, append = T)
 
 mindate <- min(NSE_stock_data$trade_date)
 maxdate <- max(NSE_stock_data$trade_date)
-write.csv(NSE_stock_data,file = paste("E:/MarketData/NSE_",mindate,"-",maxdate,".csv", sep = ""))
+#write.csv(NSE_stock_data,file = paste("E:/MarketData/NSE_",mindate,"-",maxdate,".csv", sep = ""))
 
 #NSE Indices csv
 
@@ -234,14 +234,14 @@ dbWriteTable(cn1, "nse_indices",NSE_Indices_data, append = T,row.names = F)
 
 mindate <- min(NSE_Indices_data$index_date)
 maxdate <- max(NSE_Indices_data$index_date)
-write.csv(NSE_Indices_data,file = paste("E:/MarketData/NSE_Indices_",mindate,"-",maxdate,".csv", sep = ""), row.names = F)
+#write.csv(NSE_Indices_data,file = paste("E:/MarketData/NSE_Indices_",mindate,"-",maxdate,".csv", sep = ""), row.names = F)
 
 #BSE csv
 dbWriteTable(cn1, "bse", BSE_stock_data, append = T, row.names = F)
 
 mindate <- min(BSE_stock_data$trade_date_new)
 maxdate <- max(BSE_stock_data$trade_date_new)
-write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
+#write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
 
 #Let's clean root folders to archives
 rootCleanUp()
