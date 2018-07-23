@@ -21,7 +21,7 @@ ggplot(data, aes(x=trade_date, y=sector_value))+
 data2 <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, industryclass.industry_name,sum(nse.close) as industry_value from nse
 inner join scrips on nse.isin = scrips.isin
 left join industryclass on scrips.industry = industryclass.industry_subgroup
-where nse.trade_date >= \'2018-04-01\' and industryclass.sector_name is not NULL
+where nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
 group by nse.trade_date, industryclass.sector_name, industryclass.industry_name
 order by industryclass.sector_name, nse.trade_date')
 
@@ -71,6 +71,7 @@ ggplot(data5, aes(x=trade_date, y=profit_percent))+
   geom_line()+
   geom_smooth(method = 'auto')+
   geom_hline(yintercept = 0, color = 'red', linetype='dashed')+
-  geom_line(aes(y=closing_index_value/1000))
+  geom_line(aes(y=closing_index_value/1000), color='blue')
 
-
+rm(list=ls())
+dev.off()
