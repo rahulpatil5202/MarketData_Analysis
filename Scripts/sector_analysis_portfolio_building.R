@@ -58,3 +58,19 @@ ggplot(data4, aes(x=trade_date, y=profit_percent))+
   geom_line()+
   geom_smooth(method = 'auto')+
   facet_wrap('scrip_code', scales = "free_y",dir = 'h')
+
+#Check profit percent trend 
+data5 <- dbGetQuery(cn1, 'select nse.trade_date, sum(demat.dp_bal * nse.close) as portfolioValue, ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2) as profit, ROUND(((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))/sum(demat.hold_value)*100)::numeric,2) as profit_percent, nse_indices.closing_index_value from demat
+                    inner join nse on demat.isin = nse.isin
+                    left join nse_indices on nse_indices.index_date = nse.trade_date
+                    where nse_indices.index_name = \'Nifty 50\' and nse.trade_date >= \'2017-08-01\'
+                    group by nse.trade_date, nse_indices.index_name, nse_indices.closing_index_value
+                    order by nse.trade_date desc')
+
+ggplot(data5, aes(x=trade_date, y=profit_percent))+
+  geom_line()+
+  geom_smooth(method = 'auto')+
+  geom_hline(yintercept = 0, color = 'red', linetype='dashed')+
+  geom_line(aes(y=closing_index_value/1000))
+
+
