@@ -144,7 +144,8 @@ industries_d60_top5 <- trend_data %>%
 ggplot(industries_d60_top5, aes(x=reorder(symbol,d60_prct), y=d60_prct))+
   geom_col()+
   coord_flip()+
-  facet_wrap('industry_name', scales = 'free_y')
+  facet_wrap('industry_name', scales = 'free_y')+
+  ggtitle('Short Term 60+ trades toppers')
 
 
 rm(list=ls())
