@@ -6,7 +6,7 @@ cn1 <- dbConnect(PostgreSQL(), host='localhost', port=5432, user='rahul', passwo
 data <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, sum(nse.close) as sector_value from nse
 inner join scrips on nse.isin = scrips.isin
                    left join industryclass on scrips.industry = industryclass.industry_subgroup
-                   where nse.trade_date >= \'2018-04-01\' and industryclass.sector_name is not NULL
+                   where nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
                    group by nse.trade_date, industryclass.sector_name
                    order by industryclass.sector_name, nse.trade_date')
 
@@ -40,7 +40,7 @@ ggplot(data2, aes(x=trade_date, y=industry_value))+
 data3 <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, industryclass.industry_name,nse.symbol, nse.close from nse
 inner join scrips on nse.isin = scrips.isin
 left join industryclass on scrips.industry = industryclass.industry_subgroup
-where industryclass.industry_name = \'Retailing\' and nse.trade_date >= \'2018-04-01\' and industryclass.sector_name is not NULL
+where industryclass.industry_name = \'Retailing\' and nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
 group by nse.trade_date, industryclass.sector_name, industryclass.industry_name,nse.symbol, nse.close
 order by nse.symbol,nse.trade_date')
 
@@ -62,7 +62,7 @@ ggplot(data4, aes(x=trade_date, y=profit_percent))+
   geom_line()+
   geom_smooth(method = 'auto')+
   facet_wrap('scrip_code', scales = "free_y",dir = 'h')+
-  ggtitle('Portfoli stocks and Performance')
+  ggtitle('Portfolio stocks and Performance')
 
 #Check profit percent trend 
 data5 <- dbGetQuery(cn1, 'select nse.trade_date, sum(demat.dp_bal * nse.close) as portfolioValue, ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2) as profit, ROUND(((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))/sum(demat.hold_value)*100)::numeric,2) as profit_percent, nse_indices.closing_index_value from demat
