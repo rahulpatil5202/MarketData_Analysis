@@ -1,0 +1,59 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Loading libraries and establishing connection
+```{r}
+library(tidyverse)
+library(RPostgreSQL)
+library(ggvis)
+library(plotly)
+
+cn1 <- dbConnect(PostgreSQL(), host='localhost', port=5432, user='rahul', password = 'postgres@123', dbname = 'data_science')
+
+```
+Sectorwise Trend
+```{r}
+data <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, sum(nse.close) as sector_value from nse
+inner join scrips on nse.isin = scrips.isin
+                   left join industryclass on scrips.industry = industryclass.industry_subgroup
+                   where nse.trade_date >= \'2018-04-01\' and industryclass.sector_name is not NULL
+                   group by nse.trade_date, industryclass.sector_name
+                   order by industryclass.sector_name, nse.trade_date')
+
+#Visualize sctorwise trend
+p1 <- ggplot(data, aes(x=trade_date, y=sector_value))+
+  geom_line()+
+  geom_smooth(method = 'auto')+
+  facet_wrap('sector_name', scales = "free_y",dir = 'h', ncol = 3)+
+  ggtitle('Sector weight ~ Date')+
+  xlab('')+
+  ylab('')+
+  theme(strip.text = element_text(size=6, face = "bold"))+
+  theme(axis.text.y = element_text(size = 7))
+
+(gg <- ggplotly(p1, width = 1000, height = 600))
+```
+Industrywise Trend
+```{r}
+data2 <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, industryclass.industry_name,sum(nse.close) as industry_value from nse
+inner join scrips on nse.isin = scrips.isin
+left join industryclass on scrips.industry = industryclass.industry_subgroup
+where nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
+group by nse.trade_date, industryclass.sector_name, industryclass.industry_name
+order by industryclass.sector_name, nse.trade_date')
+
+#Visualize industrywise trend
+
+p2<- ggplot(data2, aes(x=trade_date, y=industry_value))+
+  geom_line()+
+  geom_smooth(method = 'auto')+
+  facet_wrap('industry_name', scales = "free_y",dir = 'h', ncol = 3)+
+  xlab('')+
+  ylab('')+
+  ggtitle('Industry weight ~ Date')
+
+ggplotly(p2,width = 1000,height = 1300 )
+```
+

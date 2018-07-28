@@ -1,5 +1,7 @@
 library(tidyverse)
 library(RPostgreSQL)
+library(ggvis)
+library(plotly)
 
 cn1 <- dbConnect(PostgreSQL(), host='localhost', port=5432, user='rahul', password = 'postgres@123', dbname = 'data_science')
 
@@ -11,12 +13,13 @@ inner join scrips on nse.isin = scrips.isin
                    order by industryclass.sector_name, nse.trade_date')
 
 #Visualize sctorwise trend
-ggplot(data, aes(x=trade_date, y=sector_value))+
+p1 <- ggplot(data, aes(x=trade_date, y=sector_value))+
   geom_line()+
   geom_smooth(method = 'auto')+
-  facet_wrap('sector_name', scales = "free_y",dir = 'v')+
+  facet_wrap('sector_name', scales = "free_y",dir = 'h', ncol = 3)+
   ggtitle('Sector weight ~ Date')
 
+ggplotly(p1)
 
 
 data2 <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, industryclass.industry_name,sum(nse.close) as industry_value from nse
@@ -28,12 +31,13 @@ order by industryclass.sector_name, nse.trade_date')
 
 #Visualize industrywise trend
 
-ggplot(data2, aes(x=trade_date, y=industry_value))+
+p2<- ggplot(data2, aes(x=trade_date, y=industry_value))+
   geom_line()+
   geom_smooth(method = 'auto')+
-  facet_wrap('industry_name', scales = "free_y",dir = 'v')+
+  facet_wrap('industry_name', scales = "free_y",dir = 'h', ncol = 3)+
   ggtitle('Industry weight ~ Date')
 
+ggplotly(p2)
 
 #Check on stocks specific to industry or sector. Change query to realign data
 
@@ -146,6 +150,7 @@ ggplot(industries_d60_top5, aes(x=reorder(symbol,d60_prct), y=d60_prct))+
   coord_flip()+
   facet_wrap('industry_name', scales = 'free_y')+
   ggtitle('Short Term 60+ trades toppers')
+
 
 
 rm(list=ls())
