@@ -2,6 +2,7 @@ library(tidyverse)
 library(RPostgreSQL)
 library(ggvis)
 library(plotly)
+library(reshape)
 
 cn1 <- dbConnect(PostgreSQL(), host='localhost', port=5432, user='rahul', password = 'postgres@123', dbname = 'data_science')
 
@@ -82,6 +83,37 @@ ggplot(data5, aes(x=trade_date, y=profit_percent))+
   geom_hline(yintercept = 0, color = 'red', linetype='dashed')+
   geom_line(aes(y=closing_index_value/1000), color='blue')+
   ggtitle('Portfolio Profit % ~ Nifty Trend')
+
+
+#Check portfolio days gain % against Nifty gain %
+data6 <- dbGetQuery(cn1, 'select nse.trade_date, sum(demat.dp_bal * nse.close) as portfolioValue,(ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) - lag(ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) over (order by trade_date) as days_gain,ROUND(((ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) - lag(ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) over (order by trade_date))*100/(sum(demat.hold_value))::numeric,2) as days_gain_percent,ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2) as overall_gain,ROUND(((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))/sum(demat.hold_value)*100)::numeric,2) as overall_gain_percent, nse_indices.closing_index_value as nifty, ROUND((((nse_indices.closing_index_value - lag(nse_indices.closing_index_value) over (order by nse.trade_date))/nse_indices.closing_index_value)*100)::numeric,2) as nifty_change_percent  from demat
+inner join nse on demat.isin = nse.isin
+                    left join nse_indices on nse_indices.index_date = nse.trade_date
+                    group by nse.trade_date, nse_indices.index_name, nse_indices.closing_index_value
+                    having nse_indices.index_name = \'Nifty 50\' and nse.trade_date > \'2017-08-01\'
+                    order by nse.trade_date desc')
+
+data6[is.na(data6)]<- 0
+
+sub1_data6 <- data6[,c(1,4,8)]
+sub1_data6 <- sub1_data6%>%
+  arrange(trade_date)%>%
+  mutate(Portfolio_Gain_Percent = cumsum(days_gain_percent), Nifty_Gain_Percent = cumsum(nifty_change_percent))%>%
+  select(trade_date, Portfolio_Gain_Percent, Nifty_Gain_Percent)
+
+sub1_data6 <- melt(sub1_data6, id=c("trade_date"))
+
+
+
+p6<-ggplot(sub1_data6, aes(x=trade_date, y=value, color=factor(variable)))+
+  geom_line(size=0.7)+
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %y")+
+  ggtitle("Daily Portfolio Gain % ~ Nifty Change %")
+  
+  
+
+ggplotly(p6, width = 1200, height = 400)
+### Analysing current trends
 
 
 nse <- dbGetQuery(cn1,'select nse.trade_date, nse.symbol, nse.isin, nse.close, industryclass.sector_name, industryclass.industry_name  from nse
