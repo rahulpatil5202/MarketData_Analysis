@@ -3,6 +3,10 @@ library(lubridate)
 library(stringi)
 library(RPostgreSQL)
 
+nseAttempt <- 0
+nseIndicesAttempt <- 0
+bseAttempt <- 0
+
 nseDownload <- function(date_range)
 {
   cat('\n\nDownloading NSE Bhav copies now..\n\n')
@@ -30,7 +34,7 @@ nseDownload <- function(date_range)
 
 nseReattemptDownload <- function(failure_file)
 {
-  if(file.info(failure_file)$size != 0)
+  if(file.info(failure_file)$size != 0 && nseAttempt <= 3)
   {
     cat("\n\nRe-Attempting failed NSE Bhavcopy files\n\n")
     Sys.sleep(2)
@@ -38,6 +42,11 @@ nseReattemptDownload <- function(failure_file)
     failed_dates <- as.Date(failed_data$V2)
     write(NULL,"E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt")
     nseDownload(failed_dates)
+    nseAttempt <<- nseAttempt + 1
+  }
+  else if(nseAttempt > 3){
+    cat("\n\nQuitting after 3 re-attempts to download NSE Bhavcopy files.. Check internet connection.")
+    Sys.sleep(3)
   }
   else
   {
@@ -76,7 +85,7 @@ nseIndicesDownload <- function(date_range)
 
 nseIndicesReattemptDownload <- function(failure_file)
 {
-  if(file.info(failure_file)$size != 0)
+  if(file.info(failure_file)$size != 0 && nseIndicesAttempt <= 3)
   {
     cat("\n\nRe-Attempting failed NSE Indices files\n\n")
     Sys.sleep(2)
@@ -84,6 +93,11 @@ nseIndicesReattemptDownload <- function(failure_file)
     failed_dates <- as.Date(failed_data$V2)
     write(NULL,"E:/MarketData/NSE_Indices/NSE_Bhav_Failure.txt")
     nseIndicesDownload(failed_dates)
+    nseIndicesAttempt <<- nseIndicesAttempt + 1
+  }
+  else if(nseIndicesAttempt > 3){
+    cat("\n\nQuitting after 3 re-attempts to download NSE Indices files.. Check internet connection.")
+    Sys.sleep(3)
   }
   else
   {
@@ -123,11 +137,16 @@ bseReattemptDownload <- function(failure_file)
 {
   cat('\n\nRe-attempting failed BSE Bhavcopy files\n\n')
   Sys.sleep(1)
-  if(file.info(failure_file)$size != 0)
+  if(file.info(failure_file)$size != 0 && bseAttempt <= 3)
   {
     failed_data <- read.csv("E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
     failed_dates <- as.Date(failed_data$V2)
     bseDownload(failed_dates)
+    bseAttempt <<- bseAttempt + 1
+  }
+  else if(bseAttempt > 3){
+    cat("\n\nQuitting after 3 re-attempts to download BSE Bhavcopy files.. Check internet connection.")
+    Sys.sleep(3)
   }
   else
   {
@@ -158,7 +177,7 @@ bseDownload(bse_date_range)
 rm(list=ls())
 
 ## Explicitly call to download date range files
-# report_days <- seq(as.Date("2018-06-20"),as.Date("2018-07-03"),"days")
+# report_days <- seq(as.Date("2018-07-25"),as.Date("2018-07-27"),"days")
 # 
 # nseDownload(report_days)
 # nseIndicesDownload(report_days)
