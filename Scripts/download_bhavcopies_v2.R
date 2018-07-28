@@ -7,6 +7,18 @@ nseAttempt <- 0
 nseIndicesAttempt <- 0
 bseAttempt <- 0
 
+##Internet connection availability function
+isInternetConnected <- function() {
+  if (.Platform$OS.type == "windows") {
+    ipmessage <- system("ipconfig", intern = TRUE)
+  } else {
+    ipmessage <- system("ifconfig", intern = TRUE)
+  }
+  validIP <- "((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)[.]){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)"
+  any(grep(validIP, ipmessage))
+}
+
+
 nseDownload <- function(date_range)
 {
   cat('\n\nDownloading NSE Bhav copies now..\n\n')
@@ -171,10 +183,19 @@ maxdb_date_bse <- dbGetQuery(cn1, 'select max(trade_date_new) from bse')
 bse_date_range <- seq.Date(maxdb_date_bse$max+1,today()-1, "days")
 
 
-nseDownload(nse_date_range)
-nseIndicesDownload(nseIndices_date_range)
-bseDownload(bse_date_range)
-rm(list=ls())
+## Test internet connection and start downloading reports
+if(isInternetConnected() == T){
+  nseDownload(nse_date_range)
+  nseIndicesDownload(nseIndices_date_range)
+  bseDownload(bse_date_range)
+  rm(list=ls())
+}else{
+  cat("\n\n")
+  for(i in 1:4){cat("No internet connection available to download reports...\n")
+    Sys.sleep(1)}
+  cat("\n\n Exiting...")
+  Sys.sleep(2)
+}
 
 ## Explicitly call to download date range files
 # report_days <- seq(as.Date("2018-07-25"),as.Date("2018-07-27"),"days")
