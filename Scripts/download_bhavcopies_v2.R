@@ -173,9 +173,13 @@ bseReattemptDownload <- function(failure_file)
 
 cn1 <- dbConnect(PostgreSQL(), host = 'localhost', port = 5432, dbname = 'data_science',user = 'rahul', password = 'postgres@123')
 
+nse_date_range <- NULL
+nseIndices_date_range <- NULL
+bse_date_range <- NULL
+
+
 maxdb_date_nse <- dbGetQuery(cn1, 'select max(trade_date) from nse')
 nse_date_range <- seq.Date(maxdb_date_nse$max+1,today()-1,"days")
-
 maxdb_date_nseIndices <- dbGetQuery(cn1, 'select max(index_date) from nse_indices')
 nseIndices_date_range <- seq.Date(maxdb_date_nseIndices$max+1,today()-1,"days")
 
@@ -185,6 +189,9 @@ bse_date_range <- seq.Date(maxdb_date_bse$max+1,today()-1, "days")
 
 ## Test internet connection and start downloading reports
 if(isInternetConnected() == T){
+  if(nse_date_range == NULL){
+    
+  }
   nseDownload(nse_date_range)
   nseIndicesDownload(nseIndices_date_range)
   bseDownload(bse_date_range)
