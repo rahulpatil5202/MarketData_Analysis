@@ -174,6 +174,12 @@ nseScrips_Indices_Download <- function()
 
 cn1 <- dbConnect(PostgreSQL(), host = 'localhost', port = 5432, dbname = 'data_science',user = 'rahul', password = 'postgres@123')
 
+
+nse_date_range <- NULL
+nseIndices_date_range <- NULL
+bse_date_range <- NULL
+
+
 maxdb_date_nse <- dbGetQuery(cn1, 'select max(trade_date) from nse')
 nse_date_range <- seq.Date(maxdb_date_nse$max+1,today()-1,"days")
 maxdb_date_nseIndices <- dbGetQuery(cn1, 'select max(index_date) from nse_indices')
@@ -184,16 +190,27 @@ bse_date_range <- seq.Date(maxdb_date_bse$max+1,today()-1, "days")
 
 
 ## Test internet connection and start downloading reports
-if(isInternetConnected() == T){
-  nseDownload(nse_date_range)
-  nseIndicesDownload(nseIndices_date_range)
-  bseDownload(bse_date_range)
-  nseScrips_Indices_Download()
-  rm(list=ls())
+if(isInternetConnected() == T)
+  {
+    if(is.na(nse_date_range)==F){
+      nseDownload(nse_date_range)}else{
+        cat("\n\nNSE Database Upto Date\n\n") 
+        Sys.sleep(2)}
+    if(is.na(nseIndices_date_range==F)){
+      nseIndicesDownload(nseIndices_date_range)}else{
+        cat("\n\nNSE Indices Database Upto Date\n\n") 
+        Sys.sleep(2)}
+    if(is.na(bse_date_range)==F){
+      bseDownload(bse_date_range)}else{
+        cat("\n\nBSE Database Upto Date\n\n") 
+        Sys.sleep(2)}
+    nseScrips_Indices_Download()
 }else{
   cat("\n\n")
-  for(i in 1:4){cat("No internet connection available to download reports...\n")
-    Sys.sleep(1)}
+  for(i in 1:4){
+    cat("No internet connection available to download reports...\n")
+    Sys.sleep(1)
+    }
   cat("\n\n Exiting...")
   Sys.sleep(2)
 }
