@@ -3,10 +3,6 @@ library(lubridate)
 library(stringi)
 library(RPostgreSQL)
 
-nseAttempt <- 0
-nseIndicesAttempt <- 0
-bseAttempt <- 0
-
 ##Internet connection availability function
 isInternetConnected <- function() {
   if (.Platform$OS.type == "windows") {
@@ -46,7 +42,7 @@ nseDownload <- function(date_range)
 
 nseReattemptDownload <- function(failure_file)
 {
-  if(file.info(failure_file)$size != 0 && nseAttempt <= 3)
+  if(file.info(failure_file)$size != 0)
   {
     cat("\n\nRe-Attempting failed NSE Bhavcopy files\n\n")
     Sys.sleep(2)
@@ -54,11 +50,6 @@ nseReattemptDownload <- function(failure_file)
     failed_dates <- as.Date(failed_data$V2)
     write(NULL,"E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt")
     nseDownload(failed_dates)
-    nseAttempt <<- nseAttempt + 1
-  }
-  else if(nseAttempt > 3){
-    cat("\n\nQuitting after 3 re-attempts to download NSE Bhavcopy files.. Check internet connection.")
-    Sys.sleep(3)
   }
   else
   {
@@ -97,7 +88,7 @@ nseIndicesDownload <- function(date_range)
 
 nseIndicesReattemptDownload <- function(failure_file)
 {
-  if(file.info(failure_file)$size != 0 && nseIndicesAttempt <= 3)
+  if(file.info(failure_file)$size != 0)
   {
     cat("\n\nRe-Attempting failed NSE Indices files\n\n")
     Sys.sleep(2)
@@ -105,11 +96,6 @@ nseIndicesReattemptDownload <- function(failure_file)
     failed_dates <- as.Date(failed_data$V2)
     write(NULL,"E:/MarketData/NSE_Indices/NSE_Bhav_Failure.txt")
     nseIndicesDownload(failed_dates)
-    nseIndicesAttempt <<- nseIndicesAttempt + 1
-  }
-  else if(nseIndicesAttempt > 3){
-    cat("\n\nQuitting after 3 re-attempts to download NSE Indices files.. Check internet connection.")
-    Sys.sleep(3)
   }
   else
   {
@@ -149,16 +135,11 @@ bseReattemptDownload <- function(failure_file)
 {
   cat('\n\nRe-attempting failed BSE Bhavcopy files\n\n')
   Sys.sleep(1)
-  if(file.info(failure_file)$size != 0 && bseAttempt <= 3)
+  if(file.info(failure_file)$size != 0)
   {
     failed_data <- read.csv("E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
     failed_dates <- as.Date(failed_data$V2)
     bseDownload(failed_dates)
-    bseAttempt <<- bseAttempt + 1
-  }
-  else if(bseAttempt > 3){
-    cat("\n\nQuitting after 3 re-attempts to download BSE Bhavcopy files.. Check internet connection.")
-    Sys.sleep(3)
   }
   else
   {
@@ -167,16 +148,31 @@ bseReattemptDownload <- function(failure_file)
   }
 }
 
+nseScrips_Indices_Download <- function()
+{
+  cat('\n\nDownloading Sectoral indices and companies data now..\n\n')
+  Sys.sleep(1)
+    linkfile <- read.csv('E:/MarketData/NSE_Secotral_Indices/downloadPath.txt', header = T, stringsAsFactors = F)
+    for(i in 1:nrow(linkfile)){
+      link <- linkfile[i,1]
+      filepath <- linkfile[i,3]
+      tryCatch({
+        download.file(url=link, destfile = filepath, method = 'curl',mode = "wb")
+        downloadedMsg <- paste(filepath," Downloaded Sucessfully @ ",Sys.time(),sep = "")
+        write(downloadedMsg,"E:/MarketData/NSE_Secotral_Indices/Sectoral_Indices_Success.txt",append = TRUE)
+        
+      }, error=function(err.msg){
+        write(paste(weekdays(date_range[i],abbreviate=T),date_range[i],"File Failed @ ",Sys.time(),toString(err.msg),sep = ","),
+              "E:/MarketData/NSE_Secotral_Indices/Sectoral_Indices_Failure.txt", append=TRUE)
+      })
+    }
+}
+
 
 
 ## Starting main thread here
 
 cn1 <- dbConnect(PostgreSQL(), host = 'localhost', port = 5432, dbname = 'data_science',user = 'rahul', password = 'postgres@123')
-
-nse_date_range <- NULL
-nseIndices_date_range <- NULL
-bse_date_range <- NULL
-
 
 maxdb_date_nse <- dbGetQuery(cn1, 'select max(trade_date) from nse')
 nse_date_range <- seq.Date(maxdb_date_nse$max+1,today()-1,"days")
@@ -189,12 +185,10 @@ bse_date_range <- seq.Date(maxdb_date_bse$max+1,today()-1, "days")
 
 ## Test internet connection and start downloading reports
 if(isInternetConnected() == T){
-  if(nse_date_range == NULL){
-    
-  }
   nseDownload(nse_date_range)
   nseIndicesDownload(nseIndices_date_range)
   bseDownload(bse_date_range)
+  nseScrips_Indices_Download()
   rm(list=ls())
 }else{
   cat("\n\n")
