@@ -44,11 +44,18 @@ rootCleanUp <- function(){
   file.remove(nseCsvs)
   cat('\n\nDone cleaning NSE root folder')
   
-  cat('\n\nCleaning NSE Indices folder\n\n')
+  cat('\n\nCleaning NSE Indices root folder\n\n')
   nseIndCsvs <- list.files(path = 'E:/MarketData/NSE_Indices', pattern = "\\.csv$|\\.CSV$", full.names = T)
   file.copy(from = nseIndCsvs, to = 'E:/MarketData/NSE_Indices/Archive/', overwrite = T, copy.mode = T)
   file.remove(nseIndCsvs)
   cat('\n\nDone cleaning NSE Indices root folder')
+  
+  cat('\n\nCleaning NSE Sectoral Indices root folder\n\n')
+  nseSecIndCsvs <- list.files(path = 'E:/MarketData/NSE_Secotral_Indices', pattern = "\\.csv$|\\.CSV$", full.names = T)
+  file.copy(from = nseSecIndCsvs, to = 'E:/MarketData/NSE_Secotral_Indices/Archive/', overwrite = T, copy.mode = T)
+  file.remove(nseSecIndCsvs)
+  cat('\n\nDone cleaning NSE Sectoral Indices root folder')
+  
   
   rm(bseZips,bseCsvs,nseZips,nseCsvs,nseIndCsvs)
   
@@ -199,6 +206,24 @@ str(BSE_stock_data)
 BSE_stock_data$Trade_Date_New <- as.Date(BSE_stock_data$Trade_Date_New)
 str(BSE_stock_data)
 
+
+
+#######################################
+## NSE sectoral indices csvs processing to console
+
+# get all the zip files again as deleted corrupt files
+
+csv_files <- list.files(path = "E:/MarketData/NSE_Secotral_Indices/", pattern = "\\.csv$|\\.CSV$", full.names = TRUE)
+sec_map <- read.csv("E:/MarketData/NSE_Secotral_Indices/downloadPath.txt", header = T, stringsAsFactors = F)
+for(i in seq_along(csv_files)){
+  index <- sec_map[which(csv_files[i] == sec_map$filepath),'index']
+  raw <- read.csv(csv_files[i])
+  raw$index_name <- index
+  write.csv(raw,csv_files[i])
+}
+
+NSE_sec_indices <- ldply(.data = csv_files, function(x) read.csv(x, header = T, stringsAsFactors = F, as.is = T, check.names = T))
+NSE_sec_indices <- select(NSE_sec_indices, c("Company.Name","Industry","Symbol","Series","ISIN.Code","index_name"))
 rm(corruptZips,na_count,csv_files, corrupt_csvs, zipFiles, i, outpath, corrupt_zips)
 
 
@@ -209,12 +234,13 @@ rm(corruptZips,na_count,csv_files, corrupt_csvs, zipFiles, i, outpath, corrupt_z
 NSE_stock_data <- cleanColnames(NSE_stock_data)
 NSE_Indices_data <- cleanColnames(NSE_Indices_data)
 BSE_stock_data <- cleanColnames(BSE_stock_data)
-
+NSE_sec_indices <- cleanColnames(NSE_sec_indices)
 #trim white spaces from character columns using defines trimSpaces function
 
 NSE_stock_data <- trimSpaces(NSE_stock_data)
 NSE_Indices_data <- trimSpaces(NSE_Indices_data)
 BSE_stock_data <- trimSpaces(BSE_stock_data)
+NSE_sec_indices <- trimSpaces(NSE_sec_indices)
 
 
 #creating connection for postgresql
@@ -242,6 +268,10 @@ dbWriteTable(cn1, "bse", BSE_stock_data, append = T, row.names = F)
 mindate <- min(BSE_stock_data$trade_date_new)
 maxdate <- max(BSE_stock_data$trade_date_new)
 #write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
+
+
+#NSE Sectoral Indices
+dbWriteTable(cn1, "nse_sectoralindices", NSE_sec_indices, append = F, row.names = F, overwrite = T)
 
 #Let's clean root folders to archives
 rootCleanUp()
