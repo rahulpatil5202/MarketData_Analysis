@@ -17,6 +17,8 @@ cleanColnames <- function (x)
    return(x)
   }
 
+
+#Function to clean whitespaces
 trimSpaces <- function(df)
   {
    for(i in seq_along(colnames(df)))
@@ -29,6 +31,8 @@ trimSpaces <- function(df)
   return(df)
   }
 
+
+#Function to archive processed files
 rootCleanUp <- function()
   {
    cat('\n\nCleaning BSE root folder\n\n')

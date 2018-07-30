@@ -92,9 +92,9 @@ nseIndicesReattemptDownload <- function(failure_file)
   {
     cat("\n\nRe-Attempting failed NSE Indices files\n\n")
     Sys.sleep(2)
-    failed_data <- read.csv("E:/MarketData/NSE_Indices/NSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
+    failed_data <- read.csv("E:/MarketData/NSE_Indices/Failure.txt", stringsAsFactors = F, header = F)
     failed_dates <- as.Date(failed_data$V2)
-    write(NULL,"E:/MarketData/NSE_Indices/NSE_Bhav_Failure.txt")
+    write(NULL,"E:/MarketData/NSE_Indices/Failure.txt")
     nseIndicesDownload(failed_dates)
   }
   else

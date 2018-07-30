@@ -151,9 +151,11 @@ trend_data$d360_prct <- round((trend_data$close - trend_data$d360)/trend_data$cl
 
 d360_top10 <- top_n(trend_data, 10, wt = trend_data$d360_prct)
 d60_top10 <- top_n(trend_data, 10, wt = trend_data$d60_prct)
-ggplot(d360_top10, aes(x=reorder(symbol,d360_prct), y=d360_prct))+
+p7 <- ggplot(d360_top10, aes(x=reorder(symbol,d360_prct), y=d360_prct))+
   geom_col(stat='identity')+
   coord_flip()
+ggplotly(p7, height = 400, width = 600)
+
 
 ggplot(nse[nse$isin %in% d360_top10$isin,], aes(x=trade_date, y=close))+
   geom_line()+
