@@ -56,4 +56,3 @@ p2<- ggplot(data2, aes(x=trade_date, y=industry_value))+
 
 ggplotly(p2,width = 1000,height = 1300 )
 ```
-
