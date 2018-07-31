@@ -193,7 +193,7 @@ for(i in seq_along(csv_files))
   {
    raw <- read.csv(csv_files[i], header = T, stringsAsFactors = F)
    raw$Trade_Date_New <- dmy(stringi::stri_sub(csv_files[i],-10,-5))
-   write.csv(raw,csv_files[i])
+   write.csv(raw,csv_files[i],row.names = F)
    print(paste("Writing",i,"of", length(csv_files),"..Adding new column to ", csv_files[i]))
   }
 
@@ -233,7 +233,7 @@ for(i in seq_along(csv_files))
    index <- sec_map[which(csv_files[i] == sec_map$filepath),'index']
    raw <- read.csv(csv_files[i])
    raw$index_name <- index
-   write.csv(raw,csv_files[i])
+   write.csv(raw,csv_files[i], row.names = F)
   }
 
 NSE_sec_indices <- ldply(.data = csv_files, function(x) read.csv(x, header = T, stringsAsFactors = F, as.is = T, check.names = T))

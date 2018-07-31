@@ -181,12 +181,12 @@ bse_date_range <- NULL
 
 
 maxdb_date_nse <- dbGetQuery(cn1, 'select max(trade_date) from nse')
-nse_date_range <- seq.Date(maxdb_date_nse$max+1,today()-1,"days")
+nse_date_range <- seq.Date(maxdb_date_nse$max+1,today(),"days")
 maxdb_date_nseIndices <- dbGetQuery(cn1, 'select max(index_date) from nse_indices')
-nseIndices_date_range <- seq.Date(maxdb_date_nseIndices$max+1,today()-1,"days")
+nseIndices_date_range <- seq.Date(maxdb_date_nseIndices$max+1,today(),"days")
 
 maxdb_date_bse <- dbGetQuery(cn1, 'select max(trade_date_new) from bse')
-bse_date_range <- seq.Date(maxdb_date_bse$max+1,today()-1, "days")
+bse_date_range <- seq.Date(maxdb_date_bse$max+1,today(), "days")
 
 
 ## Test internet connection and start downloading reports
