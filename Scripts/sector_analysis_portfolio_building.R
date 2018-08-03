@@ -23,7 +23,8 @@ sec_ind_trend <- sec_indices_data%>%select(index_name,index_date,change)%>%
   group_by(index_name)%>%
   arrange(index_date)%>%
   mutate(cum_change = cumsum(change))%>%
-  filter(change <= quantile(change,0.99))%>%
+  filter(change < quantile(change,0.99999))%>%
+  filter(change > quantile(change,0.00001))%>%
   select(index_name,index_date,change,cum_change)
 
 stats_sec_indices <- sec_ind_trend%>%filter(index_date >= "2017-01-01")%>%
@@ -39,10 +40,10 @@ sec_chart <- ggplot(sec_ind_trend, aes(x=index_date, y=cum_change, color=index_n
   scale_x_date(date_breaks = "6 months", date_labels = "%b %y")+
   xlab("")+
   ylab("")+
-  ggtitle("Nifty Sectoral Indices - Trend (% Change)")+
   theme(plot.title = element_text(margin = margin(t = 0,b = 100,l = 0,r = 0,unit = "pt")))+
   theme(axis.text.x = element_text(angle = -30))+
-  theme(legend.position = "none")
+  theme(legend.position = "none")+
+  ggtitle("Nifty Sectoral Indices - Trend (% Change)")
 
 ggplotly(sec_chart,height = 500,width = 900)
 
@@ -73,13 +74,17 @@ sd_plot3_indices_cum <- ggplot(data=sec_ind_trend, aes(x=index_name, y=cum_chang
 ggplotly(sd_plot3_indices_cum,height = 500,width = 900)
 
 
-sd_plot4_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change)) +
-  geom_boxplot(aes(fill=index_name)) + 
-  ylab("") +
-  ggtitle("Indices Stats") +
-  stat_summary(fun.y=sd, geom="point", shape=5, size=4)
+sd_plot4_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change))+
+  geom_boxplot(aes(fill=index_name))+
+  stat_summary(fun.y=sd, geom="point", shape=5, size=2)+
+  stat_summary(fun.y=mean, geom="point",shape=1,size=2)+
+  theme(legend.position = "none")+
+  theme(axis.text.x = element_text(angle = -30))+
+  xlab("")+
+  ylab("")+
+  ggtitle("Indices Stats")
 
-ggplotly(sd_plot4_indices,height = 500,width = 900)
+ggplotly(sd_plot4_indices,height = 700,width = 1100)
 
 
 #Datewise sector weight from SQL
