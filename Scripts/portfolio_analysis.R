@@ -3,7 +3,7 @@ library(RPostgreSQL)
 
 
 
-cn1 <- dbConnect(PostgreSQL(), host='localhost', port=5432, user="rahul", password="postgres@123", dbname = "data_science")
+cn1 <- dbConnect(odbc::odbc(),dsn="RDSN")
 
 portfolio <- dbGetQuery(cn1, "select nse.trade_date, sum(demat.dp_bal * nse.close) as portfolioValue, nse_indices.closing_index_value from demat
 inner join nse on demat.isin = nse.isin

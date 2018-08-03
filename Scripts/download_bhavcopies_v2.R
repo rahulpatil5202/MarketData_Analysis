@@ -172,8 +172,7 @@ nseScrips_Indices_Download <- function()
 
 ## Starting main thread here
 
-cn1 <- dbConnect(PostgreSQL(), host = 'localhost', port = 5432, dbname = 'data_science',user = 'rahul', password = 'postgres@123')
-
+cn1 <- dbConnect(odbc::odbc(),dsn="RDSN")
 
 maxdb_date_nse <- dbGetQuery(cn1, 'select max(trade_date) from nse')
 nse_date_range <- seq.Date(maxdb_date_nse$max+1,today(),"days")

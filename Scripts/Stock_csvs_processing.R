@@ -259,7 +259,7 @@ NSE_sec_indices <- trimSpaces(NSE_sec_indices)
 
 
 #creating connection for postgresql
-cn1 <- dbConnect(PostgreSQL(), host = "localhost", port = 5432, dbname = "data_science", user = "rahul", password = "postgres@123")
+cn1 <- dbConnect(odbc::odbc(),dsn="RDSN")
 
 #NSE csv
 #Adding tables to postgreSQL

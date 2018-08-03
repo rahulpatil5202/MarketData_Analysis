@@ -6,7 +6,7 @@ library(corrplot)
 
 #connecting to postgreSQL
 
-cn1 <- dbConnect(PostgreSQL(), host = 'localhost', port = 5432,dbname = 'data_science', user = 'rahul', password='postgres@123')
+cn1 <- dbConnect(odbc::odbc(),dsn="RDSN")
 
 sbilife <- dbGetQuery(cn1, "select nse.trade_date, demat.exchange,demat.scrip_code, demat.isin, demat.dp_bal as current_dpBal, demat.hold_price as dp_holdprice, nse.close, nse.prevclose, 
 nse.tottrdqty,nse.tottrdval, nse_indices.index_name, nse_indices.closing_index_value from demat
