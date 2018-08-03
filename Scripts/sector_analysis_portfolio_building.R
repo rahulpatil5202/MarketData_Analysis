@@ -5,8 +5,11 @@ library(plotly)
 library(ggthemes)
 library(reshape)
 library(htmlwidgets)
+library(odbc)
 
-cn1 <- dbConnect(PostgreSQL(), host='localhost', port=5432, user='rahul', password = 'postgres@123', dbname = 'data_science')
+
+cn1 <- dbConnect(odbc::odbc(),dsn="RDSN")
+
 
 ##Nse indices analysis and visualization
 
@@ -20,9 +23,15 @@ sec_ind_trend <- sec_indices_data%>%select(index_name,index_date,change)%>%
   group_by(index_name)%>%
   arrange(index_date)%>%
   mutate(cum_change = cumsum(change))%>%
+  filter(change <= quantile(change,0.99))%>%
   select(index_name,index_date,change,cum_change)
 
+stats_sec_indices <- sec_ind_trend%>%filter(index_date >= "2017-01-01")%>%
+  group_by(index_name)%>%
+  summarise(q1=quantile(change,.25), mean=mean(change),meadin=median(change),q3=quantile(change,0.75), std = sd(change))
 
+
+## %Chnage trend of each index
 sec_chart <- ggplot(sec_ind_trend, aes(x=index_date, y=cum_change, color=index_name))+
   geom_line()+
   facet_wrap("index_name")+
@@ -34,16 +43,49 @@ sec_chart <- ggplot(sec_ind_trend, aes(x=index_date, y=cum_change, color=index_n
   theme(plot.title = element_text(margin = margin(t = 0,b = 100,l = 0,r = 0,unit = "pt")))+
   theme(axis.text.x = element_text(angle = -30))+
   theme(legend.position = "none")
-  
-ggplotly(sec_chart,height = 600,width = 1200)
+
+ggplotly(sec_chart,height = 500,width = 900)
 
 
+
+
+## Visualizing Standard deviation distribution
+sd_plot_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change, fill=index_name))+
+  geom_violin()+
+  stat_summary(fun.y=sd, geom="point", shape=5, size=2)+
+  ggtitle("%Change distribution with Standard deviation")
+
+ggplotly(sd_plot_indices,height = 500,width = 900)
+
+sd_plot2_indices<-ggplot(data=stats_sec_indices, aes(x=reorder(index_name,std), y=std, fill=index_name))+
+  geom_bar(stat="identity")+
+  coord_flip()+
+  ggtitle("Index and Standard Deviation")
+
+ggplotly(sd_plot2_indices,height = 500,width = 900)
+
+
+sd_plot3_indices_cum <- ggplot(data=sec_ind_trend, aes(x=index_name, y=cum_change, fill=index_name))+
+  geom_violin()+
+  stat_summary(fun.y=sd, geom="point", shape=5, size=2)+
+  ggtitle("Cumulative %Change distribution with Standard deviation")
+
+ggplotly(sd_plot3_indices_cum,height = 500,width = 900)
+
+
+sd_plot4_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change)) +
+  geom_boxplot(aes(fill=index_name)) + 
+  ylab("") +
+  ggtitle("Indices Stats") +
+  stat_summary(fun.y=sd, geom="point", shape=5, size=4)
+
+ggplotly(sd_plot4_indices,height = 500,width = 900)
 
 
 #Datewise sector weight from SQL
 
 data <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, sum(nse.close) as sector_value from nse
-inner join scrips on nse.isin = scrips.isin
+                   inner join scrips on nse.isin = scrips.isin
                    left join industryclass on scrips.industry = industryclass.industry_subgroup
                    where nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
                    group by nse.trade_date, industryclass.sector_name
@@ -64,18 +106,18 @@ p1 <- ggplot(data, aes(x=trade_date, y=sector_value))+
   #theme_excel()+
   ggtitle('Sector weight ~ Date')
 
-ggplotly(p1, height = 700, width = 1200)
+ggplotly(p1, height = 700, width = 1000)
 
 
 
 #Datewise secctor-Industry weight from SQL
 
 data2 <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, industryclass.industry_name,sum(nse.close) as industry_value from nse
-inner join scrips on nse.isin = scrips.isin
-left join industryclass on scrips.industry = industryclass.industry_subgroup
-where nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
-group by nse.trade_date, industryclass.sector_name, industryclass.industry_name
-order by industryclass.sector_name, nse.trade_date')
+                    inner join scrips on nse.isin = scrips.isin
+                    left join industryclass on scrips.industry = industryclass.industry_subgroup
+                    where nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
+                    group by nse.trade_date, industryclass.sector_name, industryclass.industry_name
+                    order by industryclass.sector_name, nse.trade_date')
 
 #Visualize industrywise trend
 
@@ -91,17 +133,17 @@ p2<- ggplot(data2, aes(x=trade_date, y=industry_value))+
   theme(axis.text.y = element_text(size = 8))+
   ggtitle('Industry weight ~ Date')
 
-ggplotly(p2, height = 1100,width = 1200)
+ggplotly(p2, height = 1200,width = 1000)
 
 
 #Check on stocks specific to industry or sector. Change query to realign data
 
 data3 <- dbGetQuery(cn1, 'select nse.trade_date, industryclass.sector_name, industryclass.industry_name,nse.symbol, nse.close from nse
-inner join scrips on nse.isin = scrips.isin
-left join industryclass on scrips.industry = industryclass.industry_subgroup
-where industryclass.industry_name = \'Retailing\' and nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
-group by nse.trade_date, industryclass.sector_name, industryclass.industry_name,nse.symbol, nse.close
-order by nse.symbol,nse.trade_date')
+                    inner join scrips on nse.isin = scrips.isin
+                    left join industryclass on scrips.industry = industryclass.industry_subgroup
+                    where industryclass.industry_name = \'Retailing\' and nse.trade_date >= \'2017-04-01\' and industryclass.sector_name is not NULL
+                    group by nse.trade_date, industryclass.sector_name, industryclass.industry_name,nse.symbol, nse.close
+                    order by nse.symbol,nse.trade_date')
 
 p3 <- ggplot(data3, aes(x=trade_date, y=close))+
   geom_line()+
@@ -120,8 +162,8 @@ ggplotly(p3, height = 700, width = 1000)
 #portfoliodata visualization
 
 data4 <- dbGetQuery(cn1, 'select nse.trade_date, demat.scrip_code, demat.hold_value, (demat.dp_bal * nse.close) as currentValue, ROUND(((demat.dp_bal * nse.close) - demat.hold_value)::numeric,2) as profit, ROUND((((demat.dp_bal * nse.close) - demat.hold_value)/demat.hold_value * 100)::numeric,2) as profit_percent from demat
-inner join nse on demat.isin = nse.isin
-where nse.trade_date >= \'2017-09-01\'
+                    inner join nse on demat.isin = nse.isin
+                    where nse.trade_date >= \'2017-09-01\'
                     group by demat.scrip_code, nse.trade_date, demat.hold_value, demat.dp_bal, nse.close
                     order by nse.trade_date desc, profit')
 
@@ -129,7 +171,7 @@ p4 <- ggplot(data4, aes(x=trade_date, y=profit_percent))+
   geom_line()+
   geom_smooth(method = 'auto')+
   geom_hline(yintercept = 0, size = 0.3, linetype="dotted", color="red")+
-  facet_wrap('scrip_code', scales = "free_y",ncol = 6)+
+  facet_wrap('scrip_code', scales = "free_y",ncol = 5)+
   xlab("")+
   ylab("")+
   scale_x_date(date_breaks = "3 months", date_labels = "%b %y")+
@@ -137,7 +179,7 @@ p4 <- ggplot(data4, aes(x=trade_date, y=profit_percent))+
   theme(axis.text.y = element_text(size = 8))+
   ggtitle('Portfolio stocks - Datewise Profit trend')
 
-ggplotly(p4, height = 700, width = 1200)
+ggplotly(p4, height = 700, width = 1000)
 
 
 ## Daily portfolio value, profit % and Nifty 50 closing index
@@ -160,7 +202,7 @@ ggplot(data5, aes(x=trade_date, y=profit_percent))+
 #Check portfolio days gain % against Nifty gain %
 
 data6 <- dbGetQuery(cn1, 'select nse.trade_date, sum(demat.dp_bal * nse.close) as portfolioValue,(ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) - lag(ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) over (order by trade_date) as days_gain,ROUND(((ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) - lag(ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2)) over (order by trade_date))*100/(sum(demat.hold_value))::numeric,2) as days_gain_percent,ROUND((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2) as overall_gain,ROUND(((sum(demat.dp_bal * nse.close) - sum(demat.hold_value))/sum(demat.hold_value)*100)::numeric,2) as overall_gain_percent, nse_indices.closing_index_value as nifty, ROUND((((nse_indices.closing_index_value - lag(nse_indices.closing_index_value) over (order by nse.trade_date))/nse_indices.closing_index_value)*100)::numeric,2) as nifty_change_percent  from demat
-inner join nse on demat.isin = nse.isin
+                    inner join nse on demat.isin = nse.isin
                     left join nse_indices on nse_indices.index_date = nse.trade_date
                     group by nse.trade_date, nse_indices.index_name, nse_indices.closing_index_value
                     having nse_indices.index_name = \'Nifty 50\' and nse.trade_date > \'2017-08-01\'
@@ -185,18 +227,18 @@ p6<-ggplot(sub1_data6, aes(x=trade_date, y=value, color=factor(variable)))+
   scale_x_date(date_breaks = "1 month", date_labels = "%b %y")+
   ggtitle("Daily Portfolio Gain % ~ Nifty Change %")+
   theme_economist()
-  
-  
 
-ggplotly(p6, width = 1200, height = 400)
+
+
+ggplotly(p6, width = 1000, height = 400)
 ### Analysing current trends
 
 
 nse <- dbGetQuery(cn1,'select nse.trade_date, nse.symbol, nse.isin, nse.close, industryclass.sector_name, industryclass.industry_name  from nse
-left join scrips on nse.isin = scrips.isin
-left join industryclass on industryclass.industry_subgroup = scrips.industry
-group by nse.symbol, nse.isin, nse.trade_date, nse.close, industryclass.sector_name, industryclass.industry_name
-order by nse.trade_date desc, nse.symbol')
+                  left join scrips on nse.isin = scrips.isin
+                  left join industryclass on industryclass.industry_subgroup = scrips.industry
+                  group by nse.symbol, nse.isin, nse.trade_date, nse.close, industryclass.sector_name, industryclass.industry_name
+                  order by nse.trade_date desc, nse.symbol')
 
 nse_days <- dbGetQuery(cn1,'select trade_date from nse group by trade_date order by trade_date desc')
 
@@ -227,38 +269,63 @@ trend_data$d360_prct <- round((trend_data$close - trend_data$d360)/trend_data$cl
 
 d360_top10 <- top_n(trend_data, 10, wt = trend_data$d360_prct)
 d60_top10 <- top_n(trend_data, 10, wt = trend_data$d60_prct)
-p7 <- ggplot(d360_top10, aes(x=reorder(symbol,d360_prct), y=d360_prct))+
-  geom_col(stat='identity')+
-  coord_flip()
-ggplotly(p7, height = 400, width = 600)
+
+p7 <- ggplot(d360_top10, aes(x=reorder(symbol,d360_prct), y=d360_prct, fill=symbol))+
+  geom_col()+
+  coord_flip()+
+  ggtitle("Top 10 Performers - Long Term 360+ Trades")+
+  xlab("")+
+  ylab("")
+
+ggplotly(p7, height = 400, width = 800)
 
 
-ggplot(nse[nse$isin %in% d360_top10$isin,], aes(x=trade_date, y=close))+
+LT_Top10_Trend <- ggplot(nse[nse$isin %in% d360_top10$isin,], aes(x=trade_date, y=close))+
+  geom_line()+
+  geom_smooth(method = 'auto')+
+  xlab("")+
+  ylab("")+
+  facet_wrap('symbol', scales = "free_y")+
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %y")+
+  theme(axis.text.x = element_text(angle = -30))+
+  ggtitle("TREND - Top 10 Performers - Long Term 360+ Trades")
+
+ggplotly(LT_Top10_Trend, width=1000, height=600)
+
+
+ST_top10_p <- ggplot(d60_top10, aes(x=reorder(symbol,d60_prct), y=d60_prct, fill=symbol))+
+  geom_col()+
+  coord_flip()+
+  ggtitle("Top 10 Performers - Short Term 60+ Trades")+
+  xlab("")+
+  ylab("")
+
+ggplotly(ST_top10_p, height = 400, width = 800)
+
+
+
+ST_top10_p_trend <- ggplot(nse[nse$isin %in% d60_top10$isin,], aes(x=trade_date, y=close))+
   geom_line()+
   geom_smooth(method = 'auto')+
   facet_wrap('symbol', scales = "free_y")+
-  ggtitle('Longterm 360+ trades toppers')
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %y")+
+  theme(axis.text.x = element_text(angle = -30))+
+  ggtitle('TREND - TOP 10 Short Term 60+ trades')
 
-
-
-ggplot(nse[nse$isin %in% d60_top10$isin,], aes(x=trade_date, y=close))+
-  geom_line()+
-  geom_smooth(method = 'auto')+
-  facet_wrap('symbol', scales = "free_y")+
-  ggtitle('Short Term 60+ trades toppers')
+ggplotly(ST_top10_p_trend, width=1000, height=600)
 
 
 industries_d60_top5 <- trend_data %>% 
   arrange(industry_name, desc(d60_prct)) %>%
   group_by(industry_name) %>%
   top_n(n=5,wt = d60_prct) # %>%
-  #filter(row_number() <=5)
+#filter(row_number() <=5)
 
 
 p_short_top5 <- ggplot(industries_d60_top5, aes(x=reorder(symbol,d60_prct), y=d60_prct))+
   geom_col()+
   coord_flip()+
-  facet_wrap('industry_name', scales = 'free_y', ncol = 5)+
+  facet_wrap('industry_name', scales = 'free_y', ncol = 4)+
   xlab("")+
   ylab("")+
   theme(strip.text = element_text(size = 6, face = "bold"))+
@@ -267,7 +334,4 @@ p_short_top5 <- ggplot(industries_d60_top5, aes(x=reorder(symbol,d60_prct), y=d6
   theme(panel.spacing.x = unit(0.5,"lines"))+
   ggtitle('Short Term 60+ trades toppers in % gain')
 
-ggplotly(p_short_top5, height = 800, width = 1200)
-
-rm(list=ls())
-dev.off()
+ggplotly(p_short_top5, height = 800, width = 1000)

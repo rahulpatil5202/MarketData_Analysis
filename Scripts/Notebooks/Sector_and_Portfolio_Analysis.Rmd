@@ -2,6 +2,7 @@
 title: "R Notebook"
 output: html_notebook
 ---
+
 ```{r}
 library(tidyverse)
 library(RPostgreSQL)
@@ -298,6 +299,5 @@ p_short_top5 <- ggplot(industries_d60_top5, aes(x=reorder(symbol,d60_prct), y=d6
   ggtitle('Short Term 60+ trades toppers in % gain')
 
 ggplotly(p_short_top5, height = 800, width = 1000)
-
 
 ```
