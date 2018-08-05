@@ -53,7 +53,10 @@ ggplotly(sec_chart,height = 500,width = 900)
 ## Visualizing Standard deviation distribution
 sd_plot_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change, fill=index_name))+
   geom_violin()+
-  stat_summary(fun.y=sd, geom="point", shape=5, size=2)+
+  stat_summary(fun.y=sd, geom = "point", shape=3, size=2, fill="black")+
+  theme(axis.text.x = element_text(angle = -30))+
+  geom_hline(yintercept = 0, color="red", linetype="dotted", size=1)+
+  theme(legend.position = "none")+
   ggtitle("%Change distribution with Standard deviation")
 
 ggplotly(sd_plot_indices,height = 500,width = 900)
@@ -68,7 +71,9 @@ ggplotly(sd_plot2_indices,height = 500,width = 900)
 
 sd_plot3_indices_cum <- ggplot(data=sec_ind_trend, aes(x=index_name, y=cum_change, fill=index_name))+
   geom_violin()+
-  stat_summary(fun.y=sd, geom="point", shape=5, size=2)+
+  stat_summary(fun.y=sd, geom="point", shape=3, size=2, fill="black")+
+  theme(axis.text.x = element_text(angle=-30))+
+  geom_hline(yintercept = 0, color="red",linetype="dotted", size=0.6)+
   ggtitle("Cumulative %Change distribution with Standard deviation")
 
 ggplotly(sd_plot3_indices_cum,height = 500,width = 900)
@@ -107,12 +112,14 @@ p1 <- ggplot(data, aes(x=trade_date, y=sector_value))+
   xlab("")+
   ylab("")+
   scale_x_date(date_breaks = "3 months", date_labels = "%b %y")+
-  #theme(axis.text.x = element_text(angle = -45))+
-  #theme_excel()+
+  theme(axis.text.x = element_text(angle = -90, size = 7))+
+  theme(axis.text.y = element_text(size = 7))+
+  theme(panel.spacing = unit(10,"points"))+
+  theme(strip.text = element_text(size = 7))+
   ggtitle('Sector weight ~ Date')
 
-ggplotly(p1, height = 700, width = 1000)
 
+ggplotly(p1, height = 700, width = 1100)
 
 
 #Datewise secctor-Industry weight from SQL
@@ -134,11 +141,11 @@ p2<- ggplot(data2, aes(x=trade_date, y=industry_value))+
   xlab("")+
   ylab("")+
   scale_x_date(date_breaks = "3 months", date_labels = "%b %y")+
-  theme(axis.text.x = element_text(size = 8, angle = -30))+
-  theme(axis.text.y = element_text(size = 8))+
+  theme(axis.text.x = element_text(size = 7, angle = -30))+
+  theme(axis.text.y = element_text(size = 7))+
   ggtitle('Industry weight ~ Date')
 
-ggplotly(p2, height = 1200,width = 1000)
+ggplotly(p2, height = 1200,width = 1100)
 
 
 #Check on stocks specific to industry or sector. Change query to realign data
@@ -159,9 +166,10 @@ p3 <- ggplot(data3, aes(x=trade_date, y=close))+
   scale_x_date(date_breaks = "3 months", date_labels = "%b %y")+
   theme(axis.text.x = element_text(size = 8, angle = -30))+
   theme(axis.text.y = element_text(size = 8))+
+  theme(panel.spacing = unit(0.2,"cm"))+
   ggtitle(paste(data3$industry_name[1]," Sector stocks performace"))
 
-ggplotly(p3, height = 700, width = 1000)
+ggplotly(p3, height = 700, width = 1100)
 
 
 #portfoliodata visualization
@@ -182,7 +190,7 @@ p4 <- ggplot(data4, aes(x=trade_date, y=profit_percent))+
   scale_x_date(date_breaks = "3 months", date_labels = "%b %y")+
   theme(axis.text.x = element_text(size = 8, angle = -30))+
   theme(axis.text.y = element_text(size = 8))+
-  ggtitle('Portfolio stocks - Datewise Profit trend')
+  ggtitle('Portfolio stocks - Datewise Profit Percent Trend')
 
 ggplotly(p4, height = 700, width = 1000)
 
@@ -225,7 +233,7 @@ sub1_data6 <- melt(sub1_data6, id=c("trade_date"))
 
 
 
-p6<-ggplot(sub1_data6, aes(x=trade_date, y=value, color=factor(variable)))+
+p6<-ggplot(sub1_data6, aes(x=trade_date, y=value, color=variable))+
   geom_line(size=0.7)+
   xlab("Trade Date")+
   ylab("Gain %")+
