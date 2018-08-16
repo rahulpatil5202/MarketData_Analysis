@@ -1,0 +1,85 @@
+---
+title: "sTOCK REPORT DASHBOARD BY RAHUL"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    social: [ "twitter", "facebook", "menu"]
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(RPostgreSQL)
+library(ggvis)
+library(plotly)
+library(ggthemes)
+library(reshape)
+library(htmlwidgets)
+library(odbc)
+```
+
+
+```{r}
+cn1 <- dbConnect(odbc::odbc(),dsn="RDSN")
+
+
+##Nse indices analysis and visualization
+
+sec_indices <- read.csv("E:/MarketData/NSE_Secotral_Indices/downloadPath.txt", stringsAsFactors = F)
+sec_indices <- sec_indices$index
+
+sec_indices_data <- dbGetQuery(cn1, 'select index_name,index_date,change,closing_index_value from nse_indices')
+sec_indices_data <- sec_indices_data[which(sec_indices_data$index_name %in% sec_indices),]
+
+sec_ind_trend <- sec_indices_data%>%select(index_name,index_date,change)%>%
+  group_by(index_name)%>%
+  arrange(index_date)%>%
+  mutate(cum_change = cumsum(change))%>%
+  filter(change < quantile(change,0.99999))%>%
+  filter(change > quantile(change,0.00001))%>%
+  select(index_name,index_date,change,cum_change)
+
+stats_sec_indices <- sec_ind_trend%>%filter(index_date >= "2017-01-01")%>%
+  group_by(index_name)%>%
+  summarise(q1=quantile(change,.25), mean=mean(change),meadin=median(change),q3=quantile(change,0.75), std = sd(change))
+```
+
+
+Nifty Sectoral Indices - Trend
+=======================================================================
+
+Column
+-----------------------------------------------------------------------
+### Sectoral Indices Performance
+```{r}
+sec_chart <- ggplot(sec_ind_trend, aes(x=index_date, y=cum_change, color=index_name))+
+  geom_line()+
+  facet_wrap("index_name")+
+  geom_hline(yintercept=0,color="red", linetype="dotted", size=1)+
+  scale_x_date(date_breaks = "6 months", date_labels = "%b %y")+
+  xlab("")+
+  ylab("")+
+  theme(plot.title = element_text(margin = margin(t = 0,b = 100,l = 0,r = 0,unit = "pt")))+
+  theme(axis.text.x = element_text(angle = -90))+
+  theme(legend.position = "none")
+
+ggplotly(sec_chart, height = 600, width = 800)
+```
+
+Row
+------------------
+### % Change distribution of daily performance alongwith standard deviatio
+
+```{r}
+sd_plot_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change, fill=index_name))+
+  geom_violin()+
+  stat_summary(fun.y=sd, geom = "point", shape=3, size=2, fill="black")+
+  theme(axis.text.x = element_text(angle = -30))+
+  xlab("")+
+  ylab("")+
+  geom_hline(yintercept = 0, color="red", linetype="dotted", size=1)+
+  theme(legend.position = "none")
+
+ggplotly(sd_plot_indices, height = 600, width = 800)
+
+```

@@ -55,6 +55,8 @@ sd_plot_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change, fill=i
   geom_violin()+
   stat_summary(fun.y=sd, geom = "point", shape=3, size=2, fill="black")+
   theme(axis.text.x = element_text(angle = -30))+
+  xlab("")+
+  ylab("")+
   geom_hline(yintercept = 0, color="red", linetype="dotted", size=1)+
   theme(legend.position = "none")+
   ggtitle("%Change distribution with Standard deviation")
