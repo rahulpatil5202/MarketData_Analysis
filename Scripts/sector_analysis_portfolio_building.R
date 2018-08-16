@@ -285,6 +285,17 @@ ggplot(culprit_stocks, aes(x=symbol))+
   coord_flip()
 
 
+## Last 10 days performance
+
+last_10d_p <- ggplot(portfolio_gains%>%select(trade_date, symbol, growthType)%>%
+  group_by(symbol)%>%
+  top_n(trade_date,n = 10), aes(x=factor(trade_date), y=symbol, color=growthType))+
+  geom_point(shape=15,size=9)
+
+last_10d_p
+
+
+
 
 
 ## Daily portfolio value, profit % and Nifty 50 closing index

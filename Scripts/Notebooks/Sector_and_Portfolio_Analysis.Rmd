@@ -3,6 +3,7 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+
 ```{r}
 
 library(tidyverse)
@@ -200,6 +201,98 @@ p4 <- ggplot(data4, aes(x=trade_date, y=profit_percent))+
   ggtitle('Portfolio stocks - Datewise Profit Percent Trend')
 
 ggplotly(p4, height = 700, width = 1000)
+
+portfolio_gains <- dbGetQuery(cn1, "select nse.trade_date, nse.symbol, nse.close, sum(demat.hold_value)as investedvalue,(demat.dp_bal * nse.close) as currentvalue,
+ROUND(((demat.dp_bal * nse.close) - lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))::numeric,2) as days_gain,
+                              ROUND((((demat.dp_bal * nse.close) - lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))/lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))::numeric,2) as days_gain_percent,
+                              ROUND(((demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2) as overallgain,
+                              ROUND((((demat.dp_bal * nse.close) - sum(demat.hold_value))/sum(demat.hold_value)*100)::numeric,2) as overallgain_percent,
+                              nse_indices.closing_index_value as Nifty,
+                              ROUND((nse_indices.closing_index_value - lag(nse_indices.closing_index_value) over (order by symbol, trade_date))::numeric,2) as niftychange,
+                              ROUND((((nse_indices.closing_index_value) - lag(nse_indices.closing_index_value) over (order by symbol, trade_date))/(lag(nse_indices.closing_index_value) over (order by symbol, trade_date))*100)::numeric,2) as niftychange_percent
+                              from nse
+                              inner join demat on demat.isin = nse.isin
+                              left join nse_indices on nse_indices.index_date = nse.trade_date
+                              where nse_indices.index_name = 'Nifty 50' and nse.trade_date >= \'2017-09-01\'
+                              group by nse.trade_date, nse.symbol, nse.close, demat.dp_bal,nse_indices.closing_index_value
+                              order by nse.trade_date desc, nse.symbol")
+
+
+portfolio_gains <- drop_na(portfolio_gains)
+
+
+
+# for(i in seq_along(portfolio_gains$days_gain))
+# {
+#   if(portfolio_gains$days_gain[i] <= 0){
+#     portfolio_gains$growthType[i] <- "Negative"
+#   }else{
+#     portfolio_gains$growthType[i] <- "Positive"
+#   }
+# }
+
+portfolio_gains$growthType <- sapply(portfolio_gains$days_gain, function(x) if(x<=0){"Negative"}else{"Positive"})
+
+
+pos_neg <- portfolio_gains%>%select(symbol, growthType)%>%
+  group_by(symbol,growthType)%>%
+  summarise(cnt=n())%>%
+  arrange(growthType,-cnt)
+
+
+pos_neg_p <- ggplot(pos_neg[which(pos_neg$growthType=="Negative"),], aes(x=reorder(symbol, cnt), y=cnt, fill="lightred"))+
+  geom_bar(stat="identity")+
+  coord_flip()+
+  theme(legend.position = "none")+
+  ggtitle("No. of days Stock gave negative returns")
+
+ggplotly(pos_neg_p, height = 500, width = 900)
+
+
+## Lets plot violin with std and mean
+
+
+
+
+
+##calculate positive negative drag
+
+p_n_drag <- portfolio_gains%>%select(symbol, days_gain_percent, growthType)%>%
+  group_by(symbol,growthType)%>%
+  arrange(desc(days_gain_percent))%>%
+  slice(2:n())%>%   ## dropping first row as it might contain outliers due to non availability of data on earlier dates
+  summarise(total=sum(days_gain_percent))
+  
+
+    
+p_n_drag$total <- abs(p_n_drag$total)
+
+p_n_drag <- p_n_drag%>%arrange(desc(growthType), desc(total))
+
+
+p_n_drag_chart <- ggplot(p_n_drag, aes(x=reorder(symbol, -total), y=total, fill=growthType))+
+  geom_bar(stat="identity", position = "fill")+
+  coord_flip()+
+  labs(x="",y="",title="Positive and Negative Drag")
+
+ggplotly(p_n_drag_chart, height = 600, width = 1100)
+
+
+## Check culprits dragging portfolio even when nifty change is positive
+
+culprit_stocks <- portfolio_gains[which(portfolio_gains$days_gain < 0 & portfolio_gains$niftychange > 0),] 
+
+culprit_stocks_stats <- culprit_stocks%>%select(symbol, days_gain_percent, overallgain)%>%
+  group_by(symbol)%>%
+  summarise(times_defaulted_nifty=n(),lossPercent_during_default=sum(days_gain_percent), loss_during_default = sum(overallgain[1]))
+
+
+
+ggplot(culprit_stocks, aes(x=symbol))+
+  geom_bar()+
+  coord_flip()
+
+
 
 
 ## Daily portfolio value, profit % and Nifty 50 closing index
