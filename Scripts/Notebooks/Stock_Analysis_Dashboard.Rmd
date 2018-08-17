@@ -217,6 +217,28 @@ data5 <- dbGetQuery(cn1, 'select nse.trade_date, sum(demat.dp_bal * nse.close) a
                     where nse_indices.index_name = \'Nifty 50\' and nse.trade_date >= \'2017-08-01\'
                     group by nse.trade_date, nse_indices.index_name, nse_indices.closing_index_value
                     order by nse.trade_date desc')
+
+portfolio_gains <- dbGetQuery(cn1, "select nse.trade_date, nse.symbol, nse.close, sum(demat.hold_value)as investedvalue,(demat.dp_bal * nse.close) as currentvalue,
+ROUND(((demat.dp_bal * nse.close) - lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))::numeric,2) as days_gain,
+                              ROUND((((demat.dp_bal * nse.close) - lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))/lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))::numeric,2) as days_gain_percent,
+                              ROUND(((demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2) as overallgain,
+                              ROUND((((demat.dp_bal * nse.close) - sum(demat.hold_value))/sum(demat.hold_value)*100)::numeric,2) as overallgain_percent,
+                              nse_indices.closing_index_value as Nifty,
+                              ROUND((nse_indices.closing_index_value - lag(nse_indices.closing_index_value) over (order by symbol, trade_date))::numeric,2) as niftychange,
+                              ROUND((((nse_indices.closing_index_value) - lag(nse_indices.closing_index_value) over (order by symbol, trade_date))/(lag(nse_indices.closing_index_value) over (order by symbol, trade_date))*100)::numeric,2) as niftychange_percent
+                              from nse
+                              inner join demat on demat.isin = nse.isin
+                              left join nse_indices on nse_indices.index_date = nse.trade_date
+                              where nse_indices.index_name = 'Nifty 50' and nse.trade_date >= \'2017-09-01\'
+                              group by nse.trade_date, nse.symbol, nse.close, demat.dp_bal,nse_indices.closing_index_value
+                              order by nse.trade_date desc, nse.symbol")
+
+
+portfolio_gains <- drop_na(portfolio_gains)
+
+
+portfolio_gains$growthType <- sapply(portfolio_gains$days_gain, function(x) if(x<=0){"Negative"}else{"Positive"})
+
 ```
 
 ```{r}
@@ -233,13 +255,13 @@ investment = data5$portfoliovalue[1] + adj
 ### Investment
 ```{r}
 valueBox(round(investment, digits = 2),
-         icon = "fa-area-chart")
+         icon = "fa-rupee")
 ```
 
 ### Profit/Loss
 ```{r}
 valueBox(round(data5$profit[1], digits = 2),
-         icon = "fa-currency")
+         icon = "fa-rupee")
 ```
 
 
@@ -256,6 +278,28 @@ gauge(round(data5$profit_percent[1],
                          colors = c("green", "yellow", "red")))
 
 ```
+
+### Max Gainer
+```{r}
+maxgainer <- portfolio_gains%>%filter(trade_date == portfolio_gains$trade_date[1])%>%
+  arrange(desc(overallgain_percent))%>%
+  slice(1)
+
+valueBox(maxgainer$symbol, color = "success")
+
+```
+
+### Max Looser
+
+```{r}
+maxlooser <- portfolio_gains%>%filter(trade_date == portfolio_gains$trade_date[1])%>%
+  arrange(overallgain_percent)%>%
+  slice(1:3)
+
+```
+
+
+
 
 ### Report as on
 ```{r}
@@ -294,32 +338,8 @@ ggplotly(p4, height = 700, width = 1300)
 
 ### Negative Performance Days
 
-```{r}
-portfolio_gains <- dbGetQuery(cn1, "select nse.trade_date, nse.symbol, nse.close, sum(demat.hold_value)as investedvalue,(demat.dp_bal * nse.close) as currentvalue,
-ROUND(((demat.dp_bal * nse.close) - lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))::numeric,2) as days_gain,
-                              ROUND((((demat.dp_bal * nse.close) - lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))/lag((demat.dp_bal * nse.close)) over(order by symbol, trade_date))::numeric,2) as days_gain_percent,
-                              ROUND(((demat.dp_bal * nse.close) - sum(demat.hold_value))::numeric,2) as overallgain,
-                              ROUND((((demat.dp_bal * nse.close) - sum(demat.hold_value))/sum(demat.hold_value)*100)::numeric,2) as overallgain_percent,
-                              nse_indices.closing_index_value as Nifty,
-                              ROUND((nse_indices.closing_index_value - lag(nse_indices.closing_index_value) over (order by symbol, trade_date))::numeric,2) as niftychange,
-                              ROUND((((nse_indices.closing_index_value) - lag(nse_indices.closing_index_value) over (order by symbol, trade_date))/(lag(nse_indices.closing_index_value) over (order by symbol, trade_date))*100)::numeric,2) as niftychange_percent
-                              from nse
-                              inner join demat on demat.isin = nse.isin
-                              left join nse_indices on nse_indices.index_date = nse.trade_date
-                              where nse_indices.index_name = 'Nifty 50' and nse.trade_date >= \'2017-09-01\'
-                              group by nse.trade_date, nse.symbol, nse.close, demat.dp_bal,nse_indices.closing_index_value
-                              order by nse.trade_date desc, nse.symbol")
-
-```
 
 ```{r}
-
-portfolio_gains <- drop_na(portfolio_gains)
-
-
-portfolio_gains$growthType <- sapply(portfolio_gains$days_gain, function(x) if(x<=0){"Negative"}else{"Positive"})
-
-
 pos_neg <- portfolio_gains%>%select(symbol, growthType)%>%
   group_by(symbol,growthType)%>%
   summarise(cnt=n())%>%
