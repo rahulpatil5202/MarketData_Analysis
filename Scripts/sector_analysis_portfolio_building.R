@@ -51,6 +51,15 @@ ggplotly(sec_chart,height = 500,width = 900)
 
 
 ## Visualizing Standard deviation distribution
+
+sd_plot2_indices<-ggplot(data=stats_sec_indices, aes(x=reorder(index_name,std), y=std, fill=index_name))+
+  geom_bar(stat="identity")+
+  coord_flip()+
+  ggtitle("Index and Standard Deviation")
+
+ggplotly(sd_plot2_indices,height = 500,width = 900)
+
+
 sd_plot_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change, fill=index_name))+
   geom_violin()+
   stat_summary(fun.y=sd, geom = "point", shape=3, size=2, fill="black")+
@@ -62,14 +71,6 @@ sd_plot_indices <- ggplot(data=sec_ind_trend, aes(x=index_name, y=change, fill=i
   ggtitle("%Change distribution with Standard deviation")
 
 ggplotly(sd_plot_indices,height = 500,width = 900)
-
-sd_plot2_indices<-ggplot(data=stats_sec_indices, aes(x=reorder(index_name,std), y=std, fill=index_name))+
-  geom_bar(stat="identity")+
-  coord_flip()+
-  ggtitle("Index and Standard Deviation")
-
-ggplotly(sd_plot2_indices,height = 500,width = 900)
-
 
 sd_plot3_indices_cum <- ggplot(data=sec_ind_trend, aes(x=index_name, y=cum_change, fill=index_name))+
   geom_violin()+
