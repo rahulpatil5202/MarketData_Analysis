@@ -454,3 +454,27 @@ p_short_top5 <- ggplot(industries_d60_top5, aes(x=reorder(symbol,d60_prct), y=d6
   ggtitle('Short Term 60+ trades toppers in % gain')
 
 ggplotly(p_short_top5, height = 800, width = 1000)
+
+
+industries_d360_top5 <- trend_data %>% 
+  arrange(industry_name, desc(d360_prct)) %>%
+  group_by(industry_name) %>%
+  top_n(n=5,wt = d360_prct) # %>%
+
+
+
+p_long_top5 <- ggplot(industries_d360_top5, aes(x=reorder(symbol,d360_prct), y=d360_prct))+
+  geom_col()+
+  theme_bw()+
+  coord_flip()+
+  facet_wrap('industry_name', scales = 'free_y', ncol = 4)+
+  xlab("")+
+  ylab("")+
+  theme(strip.text = element_text(size = 7, face = "bold", vjust = 0))+
+  theme(axis.text.y = element_text(size = 7, family="Segoe UI", face="bold"))+
+  theme(panel.spacing.y = unit(0.5,"lines"))+
+  theme(panel.spacing.x = unit(0.5,"lines"))+
+  ggtitle('Long Term 60+ trades toppers in % gain')
+
+
+ggplotly(p_long_top5, height = 1000, width = 1275)

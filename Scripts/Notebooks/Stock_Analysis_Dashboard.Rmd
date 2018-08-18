@@ -246,7 +246,7 @@ portfolio_gains$growthType <- sapply(portfolio_gains$days_gain, function(x) if(x
 if(data5$profit[1] < 0){
   adj = abs(data5$profit[1])
 }else{
-  adj=0
+  adj= -(adj)
 }
 
 investment = data5$portfoliovalue[1] + adj
@@ -351,6 +351,9 @@ pos_neg <- portfolio_gains%>%select(symbol, growthType)%>%
 
 pos_neg_p <- ggplot(pos_neg[which(pos_neg$growthType=="Negative"),], aes(x=reorder(symbol, cnt), y=cnt, fill="lightred"))+
   geom_bar(stat="identity")+
+  theme_classic()+
+  xlab("")+
+  ylab("")+
   coord_flip()+
   theme(legend.position = "none")
 
@@ -376,6 +379,7 @@ p_n_drag <- p_n_drag%>%arrange(desc(growthType), desc(total))
 
 p_n_drag_chart <- ggplot(p_n_drag, aes(x=reorder(symbol, -total), y=total, fill=growthType))+
   geom_bar(stat="identity", position = "fill")+
+  theme_classic()+
   coord_flip()+
   labs(x="",y="",title="Positive and Negative Drag")
 
@@ -437,6 +441,7 @@ culprit_stocks_stats <- culprit_stocks%>%select(symbol, days_gain_percent, overa
 ```{r}
 culp_p1 <- ggplot(culprit_stocks_stats, aes(x=reorder(symbol,times_defaulted_nifty), y=times_defaulted_nifty, fill="lightred"))+
   geom_col()+
+  theme_classic()+
   xlab("")+
   coord_flip()+
   theme(axis.text.y = element_text(size = 8))+
@@ -454,10 +459,13 @@ last_10d_p <- ggplot(portfolio_gains%>%select(trade_date, symbol, growthType)%>%
   group_by(symbol)%>%
   top_n(trade_date,n = 10), aes(x=factor(trade_date), y=symbol, color=growthType))+
   geom_point(shape=15,size=4)+
+  theme_classic()+
+  coord_flip()+
   theme(axis.text.x = element_text(angle = -90))+
   xlab("")+
   ylab("")+
   theme(axis.text.y = element_text(size = 8, face = "bold"))+
+  theme(axis.text.x = element_text(size = 8, face = "bold", family = "Verdana"))+
   theme(legend.position = "none")
 
 ggplotly(last_10d_p, height=600, width = 900)
@@ -604,10 +612,10 @@ ggplotly(ST_top10_p_trend, width=1275, height=500)
 
 ```
 
-row{data-height=1300}
+row{data-height=1100}
 ------------------------------
 
-### Top 5 from each industry
+### Short Term Top 5 from each industry
 
 ```{r}
 
@@ -620,16 +628,51 @@ industries_d60_top5 <- trend_data %>%
 
 p_short_top5 <- ggplot(industries_d60_top5, aes(x=reorder(symbol,d60_prct), y=d60_prct))+
   geom_col()+
+  theme_bw()+
   coord_flip()+
   facet_wrap('industry_name', scales = 'free_y', ncol = 4)+
   xlab("")+
   ylab("")+
-  theme(strip.text = element_text(size = 6, face = "bold"))+
-  theme(axis.text.y = element_text(size = 6, face = "bold"))+
+  theme(strip.text = element_text(size = 7, face = "bold", vjust = 0))+
+  theme(axis.text.y = element_text(size = 7, family="Tahoma", face="bold"))+
   theme(panel.spacing.y = unit(0.5,"lines"))+
   theme(panel.spacing.x = unit(0.5,"lines"))+
   ggtitle('Short Term 60+ trades toppers in % gain')
+  
 
 ggplotly(p_short_top5, height = 1000, width = 1275)
+
+```
+
+row{data-height=1100}
+------------------------------
+
+### Long Term Top 5 from each industry
+
+
+```{r}
+industries_d360_top5 <- trend_data %>% 
+  arrange(industry_name, desc(d360_prct)) %>%
+  group_by(industry_name) %>%
+  top_n(n=5,wt = d360_prct) %>%
+  filter(d360_prct > -50)
+
+
+
+p_long_top5 <- ggplot(industries_d360_top5, aes(x=reorder(symbol,d360_prct), y=d360_prct))+
+  geom_col()+
+  theme_bw()+
+  coord_flip()+
+  facet_wrap('industry_name', scales = 'free_y', ncol = 4)+
+  xlab("")+
+  ylab("")+
+  theme(strip.text = element_text(size = 7, face = "bold", vjust = 0))+
+  theme(axis.text.y = element_text(size = 7, family="Tahoma", face="bold"))+
+  theme(panel.spacing.y = unit(0.5,"lines"))+
+  theme(panel.spacing.x = unit(0.5,"lines"))+
+  ggtitle('Long Term 360+ trades toppers in % gain')
+
+
+ggplotly(p_long_top5, height = 1000, width = 1275)
 
 ```
