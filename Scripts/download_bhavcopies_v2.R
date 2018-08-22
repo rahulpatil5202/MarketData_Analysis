@@ -186,7 +186,7 @@ bse_date_range <- seq.Date(maxdb_date_bse$max+1,today(), "days")
 ## Test internet connection and start downloading reports
 if(isInternetConnected() == T)
   {
-    if(nse_date_range[1]!=today())
+    if(nse_date_range[1]<=today())
       {
       nseDownload(nse_date_range)
       }else
@@ -194,7 +194,7 @@ if(isInternetConnected() == T)
         cat("\n\nNSE Database Upto Date\n\n") 
         Sys.sleep(2)
         }
-    if(nseIndices_date_range[1]!=today())
+    if(nseIndices_date_range[1]<=today())
       {
       nseIndicesDownload(nseIndices_date_range)
       }else
@@ -202,7 +202,7 @@ if(isInternetConnected() == T)
         cat("\n\nNSE Indices Database Upto Date\n\n") 
         Sys.sleep(2)
         }
-    if(bse_date_range[1]!=today())
+    if(bse_date_range[1]<=today())
       {
       bseDownload(bse_date_range)
       }else
