@@ -17,6 +17,7 @@ isInternetConnected <- function() {
 
 nseDownload <- function(date_range)
 {
+  write(NULL,"E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt")
   cat('\n\nDownloading NSE Bhav copies now..\n\n')
   Sys.sleep(1)
   for(i in seq_along(date_range)){
@@ -64,6 +65,7 @@ nseReattemptDownload <- function(failure_file)
 
 nseIndicesDownload <- function(date_range)
 {
+  write(NULL,"E:/MarketData/NSE_Indices/Failure.txt")
   cat('\n\nDownloading NSE Indices data now..\n\n')
   Sys.sleep(1)
   for (i in seq_along(date_range)){
@@ -108,6 +110,7 @@ nseIndicesReattemptDownload <- function(failure_file)
 
 bseDownload <- function(date_range)
 {
+  write(NULL,"E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt")
   cat('\n\nDownloading BSE Bhavcopies now..\n\n')
   Sys.sleep(1)
   for (i in seq_along(date_range)){
@@ -139,6 +142,7 @@ bseReattemptDownload <- function(failure_file)
   {
     failed_data <- read.csv("E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
     failed_dates <- as.Date(failed_data$V2)
+    write(NULL,"E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt")
     bseDownload(failed_dates)
   }
   else
