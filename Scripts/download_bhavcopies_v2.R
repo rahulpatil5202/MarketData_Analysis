@@ -3,6 +3,8 @@ library(lubridate)
 library(stringi)
 library(RPostgreSQL)
 
+##test
+
 ##Internet connection availability function
 isInternetConnected <- function() {
   if (.Platform$OS.type == "windows") {
