@@ -3,7 +3,6 @@ library(lubridate)
 library(stringi)
 library(RPostgreSQL)
 
-##test
 
 ##Internet connection availability function
 isInternetConnected <- function() {
@@ -49,11 +48,19 @@ nseReattemptDownload <- function(failure_file)
   {
     cat("\n\nRe-Attempting failed NSE Bhavcopy files\n\n")
     Sys.sleep(2)
-    failed_data <- read.csv("E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
-    failed_dates <- as.Date(failed_data$V2)
-    write(NULL,"E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt")
-    nseDownload(failed_dates)
-  }
+    failed_data <- tryCatch(read.csv("E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt", stringsAsFactors = F, header = F), error=function(e) NULL)
+    if(!is.null(failed_data))
+      {
+       failed_dates <- as.Date(failed_data$V2)
+       write(NULL,"E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt")
+       nseDownload(failed_dates)
+      }
+    else
+      {
+        cat("\n\nNothing to re-attempt\n\n") 
+        write(NULL,"E:/MarketData/NSE_Bhavcopies/NSE_Bhav_Failure.txt")
+      }
+    }
   else
   {
       cat('\n\nNSE Bhavcopy download Completed\n\n')
@@ -96,10 +103,18 @@ nseIndicesReattemptDownload <- function(failure_file)
   {
     cat("\n\nRe-Attempting failed NSE Indices files\n\n")
     Sys.sleep(2)
-    failed_data <- read.csv("E:/MarketData/NSE_Indices/Failure.txt", stringsAsFactors = F, header = F)
-    failed_dates <- as.Date(failed_data$V2)
-    write(NULL,"E:/MarketData/NSE_Indices/Failure.txt")
-    nseIndicesDownload(failed_dates)
+    failed_data <- tryCatch(read.csv("E:/MarketData/NSE_Indices/Failure.txt", stringsAsFactors = F, header = F), error=function(e) NULL)
+    if(!is.null(failed_data))
+    {
+      failed_dates <- as.Date(failed_data$V2)
+      write(NULL,"E:/MarketData/NSE_Indices/Failure.txt")
+      nseIndicesDownload(failed_dates)
+    }
+    else
+    {
+      cat("\n\nNothing to re-attempt\n\n")
+      write(NULL,"E:/MarketData/NSE_Indices/Failure.txt")
+    }
   }
   else
   {
@@ -142,10 +157,19 @@ bseReattemptDownload <- function(failure_file)
   Sys.sleep(1)
   if(file.info(failure_file)$size != 0)
   {
-    failed_data <- read.csv("E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt", stringsAsFactors = F, header = F)
-    failed_dates <- as.Date(failed_data$V2)
-    write(NULL,"E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt")
-    bseDownload(failed_dates)
+    failed_data <- tryCatch(read.csv("E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt", stringsAsFactors = F, header = F), error=function(e) NULL)
+    if(!is.null(failed_data))
+    {
+      failed_dates <- as.Date(failed_data$V2)
+      write(NULL,"E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt")
+      bseDownload(failed_dates)
+    }
+    else
+    {
+      cat("\n\nNothing to re-attempt\n\n")
+      write(NULL,"E:/MarketData/BSE_Bhavcopies/BSE_Bhav_Failure.txt")
+    }
+    
   }
   else
   {
