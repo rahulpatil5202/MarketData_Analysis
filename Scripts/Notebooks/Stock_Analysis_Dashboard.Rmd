@@ -268,16 +268,15 @@ valueBox(round(data5$profit[1], digits = 2),
 
 ### Profit/Loss %
 ```{r}
-gauge(round(data5$profit_percent[1],
-            digits = 2),
+gauge(data5$profit_percent[1],
             min = -100,
             max = 100,
             symbol = "%",    
             gaugeSectors(success = c(0, 100),
-                         warning = c(-1, -9),
-                         danger = c(-10, -100),
-                         colors = c("green", "yellow", "red")))
-
+                         warning = c(-9.99, 0),
+                         danger = c(-100, -10.00), colors = c("success","warning","danger")
+                         ))
+##Need attention to range in negative numbers. i.e. from and to range as it always in reverse order for negative numbers
 ```
 
 ### Max Gainer
