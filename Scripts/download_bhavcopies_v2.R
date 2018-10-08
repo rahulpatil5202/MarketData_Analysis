@@ -15,6 +15,13 @@ isInternetConnected <- function() {
   any(grep(validIP, ipmessage))
 }
 
+isPingOk <- function(x, stderr = FALSE, stdout = FALSE, ...)
+{
+  pingvec <- system2("ping", x,
+                     stderr = FALSE,
+                     stdout = FALSE,...)
+  if (pingvec == 0) TRUE else FALSE
+}
 
 nseDownload <- function(date_range)
 {
@@ -214,7 +221,7 @@ bse_date_range <- seq.Date(maxdb_date_bse$max+1,today(), "days")
 
 
 ## Test internet connection and start downloading reports
-if(isInternetConnected() == T)
+if(isInternetConnected() == T && isPingOk("nse.com") == T)
   {
     if(nse_date_range[1]<=today())
       {
@@ -244,11 +251,13 @@ if(isInternetConnected() == T)
 }else{
   cat("\n\n")
   for(i in 1:4){
-    cat("No internet connection available to download reports...\n")
+    cat("No internet connection available or NSE/BSE sites not reachanble to download reports...\n")
     Sys.sleep(1)
     }
-  cat("\n\n Exiting...")
-  Sys.sleep(2)
+  cat("\n\n Exiting...\n\n")
+  cat ("Press [enter] to continue")
+  line <- readline()
+  #Sys.sleep(2)
 }
 
 ## Explicitly call to download date range files
