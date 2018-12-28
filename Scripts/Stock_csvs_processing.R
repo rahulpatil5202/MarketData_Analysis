@@ -165,18 +165,18 @@ rm(corrupt_csvs,na_count,csv_files,csvs_path,i,numericFields)
 ## Get vector of all file names
 zipFiles <- file.info(list.files(path="E:/MarketData/BSE_Bhavcopies",pattern="\\.zip$", full.names=TRUE))
 ## Extract vector of empty files' names
-corrupt_zips <- zipFiles[zipFiles$size < 7000,]
+corrupt_zips <- zipFiles[zipFiles$size < 10000,]
 corrupt_zips_names <- row.names(corrupt_zips)
 ## Remove empty files
 unlink(corrupt_zips_names, recursive=TRUE, force=FALSE)
 
 # get all the zip files again as deleted corrupt files
 
-zipFiles <- list.files(path = "E:/MarketData/BSE_Bhavcopies", pattern = "\\.zip$", full.names = TRUE)
+zipFiles <- file.info(list.files(path = "E:/MarketData/BSE_Bhavcopies", pattern = "\\.zip$", full.names = TRUE))
 
 # unzip all your files
 outpath <- "E:/MarketData/BSE_Bhavcopies/unzipped_csvs"
-ldply(.data = zipFiles, .fun = unzip, exdir=outpath)
+ldply(.data = row.names(zipFiles), .fun = unzip, exdir=outpath)
 
 # get the csv files
 csv_files <- list.files(path = outpath, pattern = "\\.CSV$")
