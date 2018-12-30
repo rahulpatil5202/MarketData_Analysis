@@ -147,7 +147,7 @@ for(i in numericFields)
   }
 
 
-#Check NAs
+#Check NA values
 na_count <- sapply(NSE_Indices_data, function(x) sum(length(which(is.na(x)))))
 na_count <- data.frame(na_count)
 na_count
