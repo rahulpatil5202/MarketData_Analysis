@@ -518,14 +518,14 @@ trend_data$d240 <- d240[match(trend_data$isin, d240$isin),'close']
 trend_data$d300 <- d300[match(trend_data$isin, d300$isin),'close']
 trend_data$d360 <- d360[match(trend_data$isin, d360$isin),'close']
 
-trend_data <- trend_data[complete.cases(trend_data),]
+trend_data <- trend_data[complete.cases(trend_data[7:12]),]
 
-trend_data$d60_prct <- round((trend_data$close - trend_data$d60)/trend_data$close * 100,2)
-trend_data$d120_prct <- round((trend_data$close - trend_data$d120)/trend_data$close * 100,2)
-trend_data$d180_prct <- round((trend_data$close - trend_data$d180)/trend_data$close * 100,2)
-trend_data$d240_prct <- round((trend_data$close - trend_data$d240)/trend_data$close * 100,2)
-trend_data$d300_prct <- round((trend_data$close - trend_data$d300)/trend_data$close * 100,2)
-trend_data$d360_prct <- round((trend_data$close - trend_data$d360)/trend_data$close * 100,2)
+trend_data$d60_prct <- round(((trend_data$close - trend_data$d60)/trend_data$d60) * 100,2)
+trend_data$d120_prct <- round(((trend_data$close - trend_data$d120)/trend_data$d120) * 100,2)
+trend_data$d180_prct <- round(((trend_data$close - trend_data$d180)/trend_data$d180) * 100,2)
+trend_data$d240_prct <- round(((trend_data$close - trend_data$d240)/trend_data$d240) * 100,2)
+trend_data$d300_prct <- round(((trend_data$close - trend_data$d300)/trend_data$d300) * 100,2)
+trend_data$d360_prct <- round(((trend_data$close - trend_data$d360)/trend_data$d360) * 100,2)
 
 d360_top10 <- top_n(trend_data, 10, wt = trend_data$d360_prct)
 d60_top10 <- top_n(trend_data, 10, wt = trend_data$d60_prct)
