@@ -1,0 +1,52 @@
+---
+title: "NSE2R Stats"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+    horizontal_layout: fill
+    # social: [ "twitter", "facebook", "menu"]
+---
+
+```{r}
+library(nse2r)
+```
+
+```{r}
+nse2r::nse_advances_declines()
+```
+```{r}
+nse2r::nse_index_list(clean_names = TRUE)
+
+```
+
+```{r}
+nse2r::nse_index_quote(clean_names = TRUE)
+```
+
+##52 week high
+
+```{r}
+nse2r::nse_stock_year_high(clean_names = TRUE)
+
+```
+## 52 week low
+```{r}
+nse2r::nse_stock_year_low(clean_names = TRUE)
+```
+
+##Most actively traded stocks
+```{r}
+nse2r::nse_stock_most_traded(clean_names = TRUE)
+```
+## Top gainers
+
+```{r}
+nse2r::nse_stock_top_gainers(clean_names = TRUE)
+```
+
+## Top losers
+
+```{r}
+nse2r::nse_stock_top_losers(clean_names = TRUE)
+```
