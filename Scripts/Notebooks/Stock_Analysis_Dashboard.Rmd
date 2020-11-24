@@ -569,6 +569,33 @@ ggplotly(ST_top10_p, height = 320, width = 500)
 
 ```
 
+
+row{data-height=650}
+----------------------
+### Top performers combined (ST & LT)
+
+
+```{r}
+d360_top20 <- top_n(trend_data, 20, wt = trend_data$d360_prct)
+d60_top20 <- top_n(trend_data, 20, wt = trend_data$d60_prct)
+
+recommended_stocks = d360_top20[d360_top20$symbol %in% d60_top20$symbol,]
+
+datatable(recommended_stocks, caption = "Top performers recommended",
+          rownames = T,
+          filter = "top",
+          options = list(pageLength = 100))
+
+
+# maxlooser <- portfolio_gains%>%filter(trade_date == portfolio_gains$trade_date[1])%>%
+#   arrange(overallgain_percent)%>%
+#   slice(1)
+# 
+# valueBox(maxlooser$symbol, color = "danger")
+
+```
+
+
 row{data-height=650}
 ----------------------
 
