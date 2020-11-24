@@ -570,18 +570,18 @@ ggplotly(ST_top10_p, height = 320, width = 500)
 ```
 
 
-row{data-height=650}
+row{}
 ----------------------
-### Top performers combined (ST & LT)
+### Top 30 performers merged (ST & LT)
 
 
 ```{r}
-d360_top20 <- top_n(trend_data, 20, wt = trend_data$d360_prct)
-d60_top20 <- top_n(trend_data, 20, wt = trend_data$d60_prct)
+d360_top30 <- top_n(trend_data, 30, wt = trend_data$d360_prct)
+d60_top30 <- top_n(trend_data, 30, wt = trend_data$d60_prct)
 
-recommended_stocks = d360_top20[d360_top20$symbol %in% d60_top20$symbol,]
+recommended_stocks = d360_top30[d360_top30$symbol %in% d60_top30$symbol,]
 
-datatable(recommended_stocks, caption = "Top performers recommended",
+datatable(recommended_stocks,
           rownames = T,
           filter = "top",
           options = list(pageLength = 100))
