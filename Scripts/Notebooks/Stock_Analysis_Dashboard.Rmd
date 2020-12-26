@@ -243,8 +243,9 @@ portfolio_gains$growthType <- sapply(portfolio_gains$days_gain, function(x) if(x
 ```
 
 ```{r}
+adj = abs(data5$profit[1])
 if(data5$profit[1] < 0){
-  adj = abs(data5$profit[1])
+  adj = adj
 }else{
   adj= -(adj)
 }
@@ -494,7 +495,7 @@ row{data-height=350}
 
 ```{r}
 ### data Processing
-nse <- dbGetQuery(cn1,'select nse.trade_date, nse.symbol, nse.isin, nse.close, industryclass.sector_name, industryclass.industry_name  from nse
+nse <- dbGetQuery(cn1,'select nse.trade_date, nse.symbol, nse.isin, industryclass.sector_name, industryclass.industry_name, nse.close  from nse
                   left join scrips on nse.isin = scrips.isin
                   left join industryclass on industryclass.industry_subgroup = scrips.industry
                   group by nse.symbol, nse.isin, nse.trade_date, nse.close, industryclass.sector_name, industryclass.industry_name
@@ -503,6 +504,7 @@ nse <- dbGetQuery(cn1,'select nse.trade_date, nse.symbol, nse.isin, nse.close, i
 nse_days <- dbGetQuery(cn1,'select trade_date from nse group by trade_date order by trade_date desc')
 
 d1 <- nse[nse$trade_date %in% nse_days[1,1],]
+d7 <- nse[nse$trade_date %in% nse_days[7,1],]
 d60 <- nse[nse$trade_date %in% nse_days[60,1],]
 d120 <- nse[nse$trade_date %in% nse_days[120,1],]
 d180 <- nse[nse$trade_date %in% nse_days[180,1],]
@@ -511,6 +513,7 @@ d300 <- nse[nse$trade_date %in% nse_days[300,1],]
 d360 <- nse[nse$trade_date %in% nse_days[360,1],]
 
 trend_data <- d1
+trend_data$d7 <- d7[match(trend_data$isin, d7$isin),'close']
 trend_data$d60 <- d60[match(trend_data$isin, d60$isin),'close']
 trend_data$d120 <- d120[match(trend_data$isin, d120$isin),'close']
 trend_data$d180 <- d180[match(trend_data$isin, d180$isin),'close']
@@ -520,6 +523,7 @@ trend_data$d360 <- d360[match(trend_data$isin, d360$isin),'close']
 
 trend_data <- trend_data[complete.cases(trend_data[7:12]),]
 
+trend_data$d7_prct <- round(((trend_data$close - trend_data$d7)/trend_data$d7) * 100,2)
 trend_data$d60_prct <- round(((trend_data$close - trend_data$d60)/trend_data$d60) * 100,2)
 trend_data$d120_prct <- round(((trend_data$close - trend_data$d120)/trend_data$d120) * 100,2)
 trend_data$d180_prct <- round(((trend_data$close - trend_data$d180)/trend_data$d180) * 100,2)
@@ -527,6 +531,7 @@ trend_data$d240_prct <- round(((trend_data$close - trend_data$d240)/trend_data$d
 trend_data$d300_prct <- round(((trend_data$close - trend_data$d300)/trend_data$d300) * 100,2)
 trend_data$d360_prct <- round(((trend_data$close - trend_data$d360)/trend_data$d360) * 100,2)
 
+d7_top10 <- top_n(trend_data, 10, wt = trend_data$d7_prct)
 d360_top10 <- top_n(trend_data, 10, wt = trend_data$d360_prct)
 d60_top10 <- top_n(trend_data, 10, wt = trend_data$d60_prct)
 ```
@@ -586,12 +591,21 @@ datatable(recommended_stocks,
           filter = "top",
           options = list(pageLength = 100))
 
+```
 
-# maxlooser <- portfolio_gains%>%filter(trade_date == portfolio_gains$trade_date[1])%>%
-#   arrange(overallgain_percent)%>%
-#   slice(1)
-# 
-# valueBox(maxlooser$symbol, color = "danger")
+row{}
+----------------------
+### Heroes of the week (Best performer last 7 trades)
+
+
+```{r}
+d7_top10 <- top_n(trend_data, 10, wt = trend_data$d7_prct)
+
+
+datatable(d7_top10,
+          rownames = T,
+          filter = "top",
+          options = list(pageLength = 100))
 
 ```
 
