@@ -36,32 +36,32 @@ trimSpaces <- function(df)
 rootCleanUp <- function()
   {
    cat('\n\nCleaning BSE root folder\n\n')
-   bseZips <- list.files(path = 'E:/MarketData/BSE_Bhavcopies', pattern = "\\.zip$", full.names = T)
-   file.copy(from = bseZips, to = 'E:/MarketData/BSE_Bhavcopies/Archive/', overwrite = T, copy.mode = T)
+   bseZips <- list.files(path = 'D:/marketdata/bse_bhavcopies', pattern = "\\.zip$", full.names = T)
+   file.copy(from = bseZips, to = 'D:/marketdata/bse_bhavcopies/Archive/', overwrite = T, copy.mode = T)
    file.remove(bseZips)
-   bseCsvs <- list.files(path = 'E:/MarketData/BSE_Bhavcopies/unzipped_csvs', pattern = "\\.csv$|\\.CSV$", full.names = T)
-   file.copy(from = bseCsvs, to = 'E:/MarketData/BSE_Bhavcopies/Archive/unzipped_csvs/', overwrite = T, copy.mode = T)
+   bseCsvs <- list.files(path = 'D:/marketdata/bse_bhavcopies/unzipped_csvs', pattern = "\\.csv$|\\.CSV$", full.names = T)
+   file.copy(from = bseCsvs, to = 'D:/marketdata/bse_bhavcopies/Archive/unzipped_csvs/', overwrite = T, copy.mode = T)
    file.remove(bseCsvs)
    cat('\n\nDone cleaning BSE root folder')
   
    cat('\n\nCleaning NSE root folder\n\n')
-   nseZips <- list.files(path = 'E:/MarketData/NSE_Bhavcopies', pattern = "\\.zip$", full.names = T)
-   file.copy(from = nseZips, to = 'E:/MarketData/NSE_Bhavcopies/Archive/', overwrite = T, copy.mode = T)
+   nseZips <- list.files(path = 'D:/marketdata/nse_bhavcopies', pattern = "\\.zip$", full.names = T)
+   file.copy(from = nseZips, to = 'D:/marketdata/nse_bhavcopies/Archive/', overwrite = T, copy.mode = T)
    file.remove(nseZips)
-   nseCsvs <- list.files(path = 'E:/MarketData/NSE_Bhavcopies/unzipped_csvs', pattern = "\\.csv$|\\.CSV$", full.names = T)
-   file.copy(from = nseCsvs, to = 'E:/MarketData/NSE_Bhavcopies/Archive/unzipped_csvs', overwrite = T, copy.mode = T)
+   nseCsvs <- list.files(path = 'D:/marketdata/nse_bhavcopies/unzipped_csvs', pattern = "\\.csv$|\\.CSV$", full.names = T)
+   file.copy(from = nseCsvs, to = 'D:/marketdata/nse_bhavcopies/Archive/unzipped_csvs', overwrite = T, copy.mode = T)
    file.remove(nseCsvs)
    cat('\n\nDone cleaning NSE root folder')
   
    cat('\n\nCleaning NSE Indices root folder\n\n')
-   nseIndCsvs <- list.files(path = 'E:/MarketData/NSE_Indices', pattern = "\\.csv$|\\.CSV$", full.names = T)
-   file.copy(from = nseIndCsvs, to = 'E:/MarketData/NSE_Indices/Archive/', overwrite = T, copy.mode = T)
+   nseIndCsvs <- list.files(path = 'D:/marketdata/nse_indices', pattern = "\\.csv$|\\.CSV$", full.names = T)
+   file.copy(from = nseIndCsvs, to = 'D:/marketdata/nse_indices/Archive/', overwrite = T, copy.mode = T)
    file.remove(nseIndCsvs)
    cat('\n\nDone cleaning NSE Indices root folder')
   
    cat('\n\nCleaning NSE Sectoral Indices root folder\n\n')
-   nseSecIndCsvs <- list.files(path = 'E:/MarketData/NSE_Secotral_Indices', pattern = "\\.csv$|\\.CSV$", full.names = T)
-   file.copy(from = nseSecIndCsvs, to = 'E:/MarketData/NSE_Secotral_Indices/Archive/', overwrite = T, copy.mode = T)
+   nseSecIndCsvs <- list.files(path = 'D:/marketdata/NSE_sectoral_Indices', pattern = "\\.csv$|\\.CSV$", full.names = T)
+   file.copy(from = nseSecIndCsvs, to = 'D:/marketdata/NSE_sectoral_Indices/Archive/', overwrite = T, copy.mode = T)
    file.remove(nseSecIndCsvs)
    cat('\n\nDone cleaning NSE Sectoral Indices root folder')
   
@@ -75,17 +75,17 @@ rootCleanUp <- function()
 ## NSE Bhavcopy Processing for CSVs console
 
 # get all the zip files
-zipFiles <- file.info(list.files(path = "E:/MarketData/NSE_Bhavcopies", pattern = "\\.zip$", full.names = TRUE))
+zipFiles <- file.info(list.files(path = "D:/marketdata/nse_bhavcopies", pattern = "\\.zip$", full.names = TRUE))
 corruptZips <- zipFiles[zipFiles$size < 1000,]
 
 #Delete corrupt files
 unlink(row.names(corruptZips), recursive = F, force = F)
 
 #Reset zip files after corrupt files deletion process
-zipFiles <- file.info(list.files(path = "E:/MarketData/NSE_Bhavcopies", pattern = "\\.zip$", full.names = TRUE))
+zipFiles <- file.info(list.files(path = "D:/marketdata/nse_bhavcopies", pattern = "\\.zip$", full.names = TRUE))
 
 # unzip all your files
-outpath <- "E:/MarketData/NSE_Bhavcopies/unzipped_csvs"
+outpath <- "D:/marketdata/nse_bhavcopies/unzipped_csvs"
 ldply(.data = row.names(zipFiles), .fun = unzip, exdir=outpath)
 
 # get the csv files
@@ -124,36 +124,36 @@ rm(corruptZips,na_count,zipFiles, csv_files, outpath)
 #####################################
 ## NSE Indices processing to console
 
-csvs_path <- "E:/MarketData/NSE_Indices"
+csvs_path <- "D:/marketdata/nse_indices"
 csv_files <- file.info(list.files(path = csvs_path, pattern = "\\.csv$", full.names = T))
 corrupt_csvs <- csv_files[csv_files$size < 1000,]
 unlink(row.names(corrupt_csvs), recursive = F, force = F)
 
 #Reset csv list after corrupt file deletion
 csv_files <- list.files(path = csvs_path, pattern = "\\.csv$", full.names = T)
-NSE_Indices_data <- ldply(.data = csv_files, function(x) read.csv(x, stringsAsFactors = F, as.is = T, check.names = T)) 
-head(NSE_Indices_data)
-str(NSE_Indices_data)
-summary(NSE_Indices_data)
+nse_indices_data <- ldply(.data = csv_files, function(x) read.csv(x, stringsAsFactors = F, as.is = T, check.names = T)) 
+head(nse_indices_data)
+str(nse_indices_data)
+summary(nse_indices_data)
 
 #change date and other formats
-NSE_Indices_data$Index.Date <- lubridate::dmy(NSE_Indices_data$Index.Date)
+nse_indices_data$Index.Date <- lubridate::dmy(nse_indices_data$Index.Date)
 
-numericFields <- colnames(NSE_Indices_data[,-c(1,2)])
+numericFields <- colnames(nse_indices_data[,-c(1,2)])
 
 for(i in numericFields)
   {
-   NSE_Indices_data[,i] <- as.numeric(as.character(NSE_Indices_data[,i]))
+   nse_indices_data[,i] <- as.numeric(as.character(nse_indices_data[,i]))
   }
 
 
 #Check NA values
-na_count <- sapply(NSE_Indices_data, function(x) sum(length(which(is.na(x)))))
+na_count <- sapply(nse_indices_data, function(x) sum(length(which(is.na(x)))))
 na_count <- data.frame(na_count)
 na_count
 
 #Dropping records having NA values in important columns
-NSE_Indices_data <- NSE_Indices_data[!is.na(NSE_Indices_data$Open.Index.Value),]
+nse_indices_data <- nse_indices_data[!is.na(nse_indices_data$Open.Index.Value),]
 
 rm(corrupt_csvs,na_count,csv_files,csvs_path,i,numericFields)
 
@@ -163,7 +163,7 @@ rm(corrupt_csvs,na_count,csv_files,csvs_path,i,numericFields)
 #Begin with deleting files with size less than 10 kb (invalid downloads)
 
 ## Get vector of all file names
-zipFiles <- file.info(list.files(path="E:/MarketData/BSE_Bhavcopies",pattern="\\.zip$", full.names=TRUE))
+zipFiles <- file.info(list.files(path="D:/marketdata/bse_bhavcopies",pattern="\\.zip$", full.names=TRUE))
 ## Extract vector of empty files' names
 corrupt_zips <- zipFiles[zipFiles$size < 10000,]
 corrupt_zips_names <- row.names(corrupt_zips)
@@ -172,17 +172,17 @@ unlink(corrupt_zips_names, recursive=TRUE, force=FALSE)
 
 # get all the zip files again as deleted corrupt files
 
-zipFiles <- file.info(list.files(path = "E:/MarketData/BSE_Bhavcopies", pattern = "\\.zip$", full.names = TRUE))
+zipFiles <- file.info(list.files(path = "D:/marketdata/bse_bhavcopies", pattern = "\\.zip$", full.names = TRUE))
 
 # unzip all your files
-outpath <- "E:/MarketData/BSE_Bhavcopies/unzipped_csvs"
+outpath <- "D:/marketdata/bse_bhavcopies/unzipped_csvs"
 ldply(.data = row.names(zipFiles), .fun = unzip, exdir=outpath)
 
 # get the csv files
 csv_files <- list.files(path = outpath, pattern = "\\.CSV$")
 
 # read the csv files
-setwd("E:/MarketData/BSE_Bhavcopies/unzipped_csvs/")
+setwd("D:/marketdata/bse_bhavcopies/unzipped_csvs/")
 getwd()
 
 #Let's add a new column date using csvs file name to each csv
@@ -226,8 +226,8 @@ str(BSE_stock_data)
 
 # get all the zip files again as deleted corrupt files
 
-csv_files <- list.files(path = "E:/MarketData/NSE_Secotral_Indices/", pattern = "\\.csv$|\\.CSV$", full.names = TRUE)
-sec_map <- read.csv("E:/MarketData/NSE_Secotral_Indices/downloadPath.txt", header = T, stringsAsFactors = F)
+csv_files <- list.files(path = "D:/marketdata/nse_sectoral_indices/", pattern = "\\.csv$|\\.CSV$", full.names = TRUE)
+sec_map <- read.csv("D:/marketdata/nse_sectoral_indices/downloadPath.txt", header = T, stringsAsFactors = F)
 for(i in seq_along(csv_files))
   {
    index <- sec_map[which(csv_files[i] == sec_map$filepath),'index']
@@ -246,14 +246,14 @@ rm(corruptZips,na_count,csv_files, corrupt_csvs, zipFiles, i, outpath, corrupt_z
 
 #Cleaning column names
 NSE_stock_data <- cleanColnames(NSE_stock_data)
-NSE_Indices_data <- cleanColnames(NSE_Indices_data)
+nse_indices_data <- cleanColnames(nse_indices_data)
 BSE_stock_data <- cleanColnames(BSE_stock_data)
 NSE_sec_indices <- cleanColnames(NSE_sec_indices)
 
 
 #trim white spaces from character columns using defines trimSpaces function
 NSE_stock_data <- trimSpaces(NSE_stock_data)
-NSE_Indices_data <- trimSpaces(NSE_Indices_data)
+nse_indices_data <- trimSpaces(nse_indices_data)
 BSE_stock_data <- trimSpaces(BSE_stock_data)
 NSE_sec_indices <- trimSpaces(NSE_sec_indices)
 
@@ -267,22 +267,22 @@ dbWriteTable(cn1, "nse", NSE_stock_data, row.names = F, append = T)
 
 #mindate <- min(NSE_stock_data$trade_date)
 #maxdate <- max(NSE_stock_data$trade_date)
-#write.csv(NSE_stock_data,file = paste("E:/MarketData/NSE_",mindate,"-",maxdate,".csv", sep = ""))
+#write.csv(NSE_stock_data,file = paste("D:/marketdata/NSE_",mindate,"-",maxdate,".csv", sep = ""))
 
 #NSE Indices csv
 
-dbWriteTable(cn1, "nse_indices",NSE_Indices_data, append = T,row.names = F)
+dbWriteTable(cn1, "nse_indices",nse_indices_data, append = T,row.names = F)
 
-#mindate <- min(NSE_Indices_data$index_date)
-#maxdate <- max(NSE_Indices_data$index_date)
-#write.csv(NSE_Indices_data,file = paste("E:/MarketData/NSE_Indices_",mindate,"-",maxdate,".csv", sep = ""), row.names = F)
+#mindate <- min(nse_indices_data$index_date)
+#maxdate <- max(nse_indices_data$index_date)
+#write.csv(nse_indices_data,file = paste("D:/marketdata/nse_indices_",mindate,"-",maxdate,".csv", sep = ""), row.names = F)
 
 #BSE csv
 dbWriteTable(cn1, "bse", BSE_stock_data, append = T, row.names = F)
 
 #mindate <- min(BSE_stock_data$trade_date_new)
 #maxdate <- max(BSE_stock_data$trade_date_new)
-#write.csv(BSE_stock_data,file = paste("E:/MarketData/BSE_",mindate,"-",maxdate,".csv", sep = ""))
+#write.csv(BSE_stock_data,file = paste("D:/marketdata/BSE_",mindate,"-",maxdate,".csv", sep = ""))
 
 
 #NSE Sectoral Indices
